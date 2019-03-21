@@ -9,6 +9,6 @@ namespace Engine {
     bitboard bKings, bQueens, bRooks, bBishops, bKnights, bPawns;
 }
 
-void init(EPD position) {
+void init(EPD& position) {
 
 };

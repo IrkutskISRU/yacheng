@@ -6,7 +6,7 @@
 #include "constants.h"
 int main() {
 
-    EPD position("rn2kbr1/pb2ppp1/2q5/2pp3p/2PP1Pn1/P1N1P3/RP2K1PP/2BQ2NR w q -");
+    EPD position("1n4kr/2B4p/2nb2b1/ppp5/P1PpP3/3P4/5K2/1N1R4 b - c3");
     position.print();
 
     return 0;

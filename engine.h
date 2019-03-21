@@ -7,4 +7,4 @@
 #include "board.h"
 #include "constants.h"
 
-void init(EPD position);
+void init(EPD& position);

@@ -21,7 +21,8 @@ private:
     bitboard wKings, wQueens, wRooks, wBishops, wKnights, wPawns;
     bitboard bKings, bQueens, bRooks, bBishops, bKnights, bPawns;
     int color;
-
+    bool castleQ, castleK, castleq, castlek;
+    string enPassant;
     void reset();
 };
 

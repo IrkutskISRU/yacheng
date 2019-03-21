@@ -60,13 +60,26 @@ EPD::EPD(const string& s) {
         }
 
         if (numberOfBit == 66) {
-            if (ch == 'b') {
+            if (ch == 'w') {
                 color = WHITE;
             } else {
                 color = BLACK;
             }
         }
 
+        if (numberOfBit > 66) {
+            if (ch == 'K') castleK = true;
+            if (ch == 'Q') castleQ = true;
+            if (ch == 'k') castlek = true;
+            if (ch == 'q') castleq = true;
+        }
+
+    }
+
+    if (s[s.length()-1] != '-') {
+        enPassant = s.substr(s.length()-2, 2);
+    } else {
+        enPassant = "-";
     }
 
 }
@@ -115,9 +128,17 @@ void EPD::print() const {
                 cout << " ";
             }
         }
-        cout << "|\n";
+        cout << "|" << 8-i << "\n";
     }
+
+    cout << "  ";
+    for (int i = 0; i < 8; i ++)
+        cout << s[i] << " ";
+    cout << "\n";
+
     cout << (color == WHITE ? "WHITE MOVE" : "BLACK MOVE") << "\n";
+    cout << "Castles: " << castleQ << " " << castleK << " " << castleq << " " << castlek << "\n";
+    cout << "En passant " << enPassant << "\n";
 }
 
 void EPD::reset() {
@@ -133,4 +154,11 @@ void EPD::reset() {
     bBishops = 0;
     bKnights = 0;
     bPawns = 0;
+
+    castleK = false;
+    castleQ = false;
+    castleq = false;
+    castlek = false;
+
+    enPassant = "";
 }
