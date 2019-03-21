@@ -8,3 +8,7 @@ namespace Engine {
     bitboard wKings, wQueens, wRooks, wBishops, wKnights, wPawns;
     bitboard bKings, bQueens, bRooks, bBishops, bKnights, bPawns;
 }
+
+void init(EPD position) {
+
+};

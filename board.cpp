@@ -60,14 +60,18 @@ EPD::EPD(const string& s) {
         }
 
         if (numberOfBit == 66) {
-            cout << ch << "\n";
+            if (ch == 'b') {
+                color = WHITE;
+            } else {
+                color = BLACK;
+            }
         }
 
     }
 
 }
 
-void EPD::print()  {
+void EPD::print() const {
     string s = "abcdefgh";
     cout << "  ";
     for (int i = 0; i < 8; i ++)
@@ -113,6 +117,7 @@ void EPD::print()  {
         }
         cout << "|\n";
     }
+    cout << (color == WHITE ? "WHITE MOVE" : "BLACK MOVE") << "\n";
 }
 
 void EPD::reset() {
@@ -128,8 +133,4 @@ void EPD::reset() {
     bBishops = 0;
     bKnights = 0;
     bPawns = 0;
-}
-
-void init(EPD position) {
-
 }

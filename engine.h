@@ -4,3 +4,7 @@
 #pragma once
 
 #include "types.h"
+#include "board.h"
+#include "constants.h"
+
+void init(EPD position);
