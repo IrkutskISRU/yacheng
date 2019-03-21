@@ -4,3 +4,4 @@
 #pragma once
 
 typedef unsigned long long bitboard;
+typedef long long ll;

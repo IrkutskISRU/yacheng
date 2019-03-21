@@ -4,6 +4,10 @@
 
 #include "board.h"
 
+EPD::EPD() {
+    reset();
+}
+
 EPD::EPD(const string& s) {
 
     reset();
@@ -87,8 +91,9 @@ EPD::EPD(const string& s) {
 void EPD::print() const {
     string s = "abcdefgh";
     cout << "  ";
-    for (int i = 0; i < 8; i ++)
+    for (int i = 0; i < 8; i ++) {
         cout << s[i] << " ";
+    }
     cout << "\n";
 
     for (int i = 0; i < 8; i++) {
@@ -132,8 +137,9 @@ void EPD::print() const {
     }
 
     cout << "  ";
-    for (int i = 0; i < 8; i ++)
+    for (int i = 0; i < 8; i ++) {
         cout << s[i] << " ";
+    }
     cout << "\n";
 
     cout << (color == WHITE ? "WHITE MOVE" : "BLACK MOVE") << "\n";

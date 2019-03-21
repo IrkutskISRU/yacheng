@@ -14,6 +14,7 @@ using namespace std;
 class EPD {
 public:
 
+    EPD();
     EPD(const string& s);
     void print() const;
 
