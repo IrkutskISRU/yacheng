@@ -54,8 +54,17 @@ void testPerft() {
     for (int i = 0; i < 10; i++) {
         tests[i].print();
         Engine::init(tests[i].position);
-        Engine::alphabeta(tests[i].position.color,6,-oo, oo);
-        cout << "Visited Positions " << Engine::getVisitedPositionsCnt() << "\n";
+        Engine::alphabeta(tests[i].position.color, 6, -oo, oo);
+
+        cout << "Visited Positions: ";
+        auto visitedPositions = Engine::getVisitedPositionsCnt();
+        for (auto it = visitedPositions.rbegin(); it != visitedPositions.rend(); it++) {
+            if (*it > 0) {
+                cout << *it << " ";
+            }
+
+        }
+        cout << "\n";
     }
 
 

@@ -22,5 +22,30 @@ namespace BitBoard {
 
     }
 
+    void initDecode() {
+        int i = 1;
+        for (int j = 0; j <= 15; j++) {
+            decode[i] = j;
+            i *= 2;
+        }
+    };
+
+    int bitNumberFromBitBoard(bitboard bb) {
+
+        ull ans = 0;
+
+        ans = (bb >> 48) & MASK;
+        if (ans) return decode[ans] + 48;
+
+        ans = (bb >> 32) & MASK;
+        if (ans) return decode[ans] + 32;
+
+        ans = (bb >> 16) & MASK;
+        if (ans) return decode[ans] + 16;
+
+        return decode[bb & MASK];
+
+    }
+
 }
 

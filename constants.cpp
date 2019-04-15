@@ -29,13 +29,14 @@ namespace Constants {
             if (i % 8 != 7 && i / 8 != 7)
                 KING_MOVES[i] += 1ull << (i + 9);
 
-//            BitBoard::print(KING_MOVES[i]);
-            std::cout << KING_MOVES[i] << "\n";
+            std::cout << KING_MOVES[i] << ", ";
+            if (i%8 == 7) std::cout << "\n";
+
         }
 
     }
 
     void init() {
-        init_queens();
+//        init_queens();
     }
 }

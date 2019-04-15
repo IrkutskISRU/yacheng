@@ -19,36 +19,47 @@ EPD::EPD(const string& s) {
             switch (ch) {
                 case 'K': {
                     wKings ^= (1ull << numberOfBit);
+                    break;
                 }
                 case 'Q': {
                     wQueens ^= (1ull << numberOfBit);
+                    break;
                 }
                 case 'R': {
                     wRooks ^= (1ull << numberOfBit);
+                    break;
                 }
                 case 'B': {
                     wBishops ^= (1ull << numberOfBit);
+                    break;
                 }
                 case 'N': {
                     wKnights ^= (1ull << numberOfBit);
+                    break;
                 }
                 case 'P': {
                     wPawns ^= (1ull << numberOfBit);
+                    break;
                 }
                 case 'k': {
                     bKings ^= (1ull << numberOfBit);
+                    break;
                 }
                 case 'q': {
                     bQueens ^= (1ull << numberOfBit);
+                    break;
                 }
                 case 'r': {
                     bRooks ^= (1ull << numberOfBit);
+                    break;
                 }
                 case 'b': {
                     bBishops ^= (1ull << numberOfBit);
+                    break;
                 }
                 case 'n': {
                     bKnights ^= (1ull << numberOfBit);
+                    break;
                 }
                 case 'p': {
                     bPawns ^= (1ull << numberOfBit);
@@ -142,8 +153,8 @@ void EPD::print() const {
     }
     cout << "\n";
 
-    cout << (color == WHITE ? "WHITE MOVE" : "BLACK MOVE") << "\n";
-    cout << "Castles: " << castleQ << " " << castleK << " " << castleq << " " << castlek << "\n";
+    cout << (color == WHITE ? "WHITE MOVE" : "BLACK MOVE") << " | ";
+    cout << "Castles: " << castleQ << " " << castleK << " " << castleq << " " << castlek << " | ";
     cout << "En passant " << enPassant << "\n";
 }
 

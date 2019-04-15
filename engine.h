@@ -3,6 +3,8 @@
 //
 #pragma once
 
+#include <vector>
+
 #include "types.h"
 #include "board.h"
 #include "constants.h"
@@ -10,5 +12,5 @@
 namespace Engine {
     void init(EPD &position);
     void alphabeta(int color, int depth, int alpha, int beta);
-    ll getVisitedPositionsCnt();
+    vector<ll> getVisitedPositionsCnt();
 }
