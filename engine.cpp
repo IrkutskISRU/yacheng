@@ -4,6 +4,24 @@
 
 #define INIT(variable) variable = position.variable;
 
+#define FIGURE_CASE(figure, colorFigures) if (figure & mv.from) { \
+figure ^= mv.from;                                      \
+figure ^= mv.to;                                        \
+colorFigures ^= mv.from;                                \
+colorFigures ^= mv.to;                                  \
+figures ^= mv.from;                                     \
+figures ^= mv.to;                                       \
+}
+
+#define UNDO_FIGURE_CASE(figure, colorFigures) if (figure & mv.to) { \
+figure ^= mv.from;                                      \
+figure ^= mv.to;                                        \
+colorFigures ^= mv.from;                                \
+colorFigures ^= mv.to;                                  \
+figures ^= mv.from;                                     \
+figures ^= mv.to;                                       \
+}\
+
 #include "bitboard.h"
 #include "engine.h"
 #include <list>
@@ -37,49 +55,18 @@ namespace Engine {
     };
 
     inline void doMove(move mv) {
-        if (wKings & mv.from) {
-            wKings ^= mv.from;
-            wKings ^= mv.to;
 
-            wFigures ^= mv.from;
-            wFigures ^= mv.to;
-
-            figures ^= mv.from;
-            figures ^= mv.to;
-        }
-        if (bKings & mv.from) {
-            bKings ^= mv.from;
-            bKings ^= mv.to;
-
-            bFigures ^= mv.from;
-            bFigures ^= mv.to;
-
-            figures ^= mv.from;
-            figures ^= mv.to;
-        }
+        FIGURE_CASE(wKings, wFigures)
+        FIGURE_CASE(wKnights, wFigures)
+        FIGURE_CASE(bKings, bFigures)
+        FIGURE_CASE(bKnights, bFigures)
     }
 
     inline void undoMove(move mv) {
-        if (wKings & mv.to) {
-            wKings ^= mv.from;
-            wKings ^= mv.to;
-
-            wFigures ^= mv.from;
-            wFigures ^= mv.to;
-
-            figures ^= mv.from;
-            figures ^= mv.to;
-        }
-        if (bKings & mv.to) {
-            bKings ^= mv.from;
-            bKings ^= mv.to;
-
-            bFigures ^= mv.from;
-            bFigures ^= mv.to;
-
-            figures ^= mv.from;
-            figures ^= mv.to;
-        }
+        UNDO_FIGURE_CASE(wKings, wFigures)
+        UNDO_FIGURE_CASE(wKnights, wFigures)
+        UNDO_FIGURE_CASE(bKings, bFigures)
+        UNDO_FIGURE_CASE(bKnights, bFigures)
     }
 
     void init(EPD &position) {
@@ -129,6 +116,21 @@ namespace Engine {
 
                 bbFrom ^= positionFrom;
             }
+            bbFrom = wKnights;
+            while (bbFrom) {
+                bitboard positionFrom = (bbFrom & -bbFrom);
+                bitboard bbTo = KNIGHT_MOVES[BitBoard::bitNumberFromBitBoard(positionFrom)] & (~figures);
+
+                while (bbTo) {
+                    bitboard positionTo = (bbTo & -bbTo);
+                    moves.push_back({positionFrom, positionTo});
+
+                    bbTo ^= positionTo;
+                }
+
+                bbFrom ^= positionFrom;
+            }
+
 
         } else {
             bitboard bbFrom = bKings;
@@ -139,9 +141,19 @@ namespace Engine {
                 while (bbTo) {
                     bitboard positionTo = (bbTo & -bbTo);
                     moves.push_back({positionFrom, positionTo});
-//                    cout << bKings << "\n";
-//                    cout << BitBoard::bitNumberFromBitBoard(positionFrom) << "/" << BitBoard::bitNumberFromBitBoard(positionTo) << "|";
+                    bbTo ^= positionTo;
+                }
 
+                bbFrom ^= positionFrom;
+            }
+            bbFrom = bKnights;
+            while (bbFrom) {
+                bitboard positionFrom = (bbFrom & -bbFrom);
+                bitboard bbTo = KNIGHT_MOVES[BitBoard::bitNumberFromBitBoard(positionFrom)] & (~figures);
+
+                while (bbTo) {
+                    bitboard positionTo = (bbTo & -bbTo);
+                    moves.push_back({positionFrom, positionTo});
                     bbTo ^= positionTo;
                 }
 
