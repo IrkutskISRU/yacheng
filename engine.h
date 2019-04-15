@@ -7,4 +7,8 @@
 #include "board.h"
 #include "constants.h"
 
-void init(EPD& position);
+namespace Engine {
+    void init(EPD &position);
+    void alphabeta(int color, int depth, int alpha, int beta);
+    ll getVisitedPositionsCnt();
+}

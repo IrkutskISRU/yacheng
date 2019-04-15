@@ -11,14 +11,10 @@
 
 using namespace std;
 
-class EPD {
-public:
-
+struct EPD {
     EPD();
     EPD(const string& s);
     void print() const;
-
-private:
     bitboard wKings, wQueens, wRooks, wBishops, wKnights, wPawns;
     bitboard bKings, bQueens, bRooks, bBishops, bKnights, bPawns;
     int color;
