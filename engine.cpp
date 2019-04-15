@@ -58,6 +58,8 @@ namespace Engine {
 
     inline void generateMoves() {
         visitedPositionsCnt ++;
+        list<move> moves;
+
         if (color == WHITE) {
 
         }
@@ -66,7 +68,6 @@ namespace Engine {
 
     void alphabeta(int color, int depth, int alpha, int beta) {
 
-        vector
         generateMoves();
 
     }

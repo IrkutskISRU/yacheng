@@ -4,6 +4,9 @@
 
 #pragma once
 
+#include "types.h"
+#include "bitboard.h"
+
 const int oo = 1000000000;
 
 const int WHITE = 128;
@@ -29,3 +32,10 @@ const int BLACK_BISHOP = BLACK | BISHOP;
 const int BLACK_ROOK = BLACK | ROOK;
 const int BLACK_QUEEN = BLACK | QUEEN;
 const int BLACK_KING = BLACK | KING;
+
+static bitboard KING_MOVES[64];
+
+namespace Constants {
+
+    void init();
+}
