@@ -58,15 +58,19 @@ namespace Engine {
 
         FIGURE_CASE(wKings, wFigures)
         FIGURE_CASE(wKnights, wFigures)
+        FIGURE_CASE(wPawns, wFigures)
         FIGURE_CASE(bKings, bFigures)
         FIGURE_CASE(bKnights, bFigures)
+        FIGURE_CASE(bPawns, bFigures)
     }
 
     inline void undoMove(move mv) {
         UNDO_FIGURE_CASE(wKings, wFigures)
         UNDO_FIGURE_CASE(wKnights, wFigures)
+        UNDO_FIGURE_CASE(wPawns, wFigures)
         UNDO_FIGURE_CASE(bKings, bFigures)
         UNDO_FIGURE_CASE(bKnights, bFigures)
+        UNDO_FIGURE_CASE(bPawns, bFigures)
     }
 
     void init(EPD &position) {
@@ -101,64 +105,56 @@ namespace Engine {
     inline list<move> generateMoves(int color) {
         list<move> moves;
 
-        if (color == WHITE) {
-            bitboard bbFrom = wKings;
-            while (bbFrom) {
-                bitboard positionFrom = (bbFrom & -bbFrom);
-                bitboard bbTo = KING_MOVES[BitBoard::bitNumberFromBitBoard(positionFrom)] & (~figures);
 
-                while (bbTo) {
-                    bitboard positionTo = (bbTo & -bbTo);
-                    moves.push_back({positionFrom, positionTo});
+        bitboard bbFrom = (color == WHITE) ? wKings : bKings;
+        while (bbFrom) {
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            bitboard bbTo = KING_MOVES[BitBoard::bitNumberFromBitBoard(positionFrom)] & (~figures);
 
-                    bbTo ^= positionTo;
-                }
+            while (bbTo) {
+                bitboard positionTo = (bbTo & -bbTo);
+                moves.push_back({positionFrom, positionTo});
 
-                bbFrom ^= positionFrom;
-            }
-            bbFrom = wKnights;
-            while (bbFrom) {
-                bitboard positionFrom = (bbFrom & -bbFrom);
-                bitboard bbTo = KNIGHT_MOVES[BitBoard::bitNumberFromBitBoard(positionFrom)] & (~figures);
-
-                while (bbTo) {
-                    bitboard positionTo = (bbTo & -bbTo);
-                    moves.push_back({positionFrom, positionTo});
-
-                    bbTo ^= positionTo;
-                }
-
-                bbFrom ^= positionFrom;
+                bbTo ^= positionTo;
             }
 
+            bbFrom ^= positionFrom;
+        }
+        bbFrom = (color == WHITE) ? wKnights : bKnights;
+        while (bbFrom) {
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            bitboard bbTo = KNIGHT_MOVES[BitBoard::bitNumberFromBitBoard(positionFrom)] & (~figures);
 
-        } else {
-            bitboard bbFrom = bKings;
-            while (bbFrom) {
-                bitboard positionFrom = (bbFrom & -bbFrom);
-                bitboard bbTo = KING_MOVES[BitBoard::bitNumberFromBitBoard(positionFrom)] & (~figures);
+            while (bbTo) {
+                bitboard positionTo = (bbTo & -bbTo);
+                moves.push_back({positionFrom, positionTo});
 
-                while (bbTo) {
-                    bitboard positionTo = (bbTo & -bbTo);
-                    moves.push_back({positionFrom, positionTo});
-                    bbTo ^= positionTo;
-                }
-
-                bbFrom ^= positionFrom;
+                bbTo ^= positionTo;
             }
-            bbFrom = bKnights;
-            while (bbFrom) {
-                bitboard positionFrom = (bbFrom & -bbFrom);
-                bitboard bbTo = KNIGHT_MOVES[BitBoard::bitNumberFromBitBoard(positionFrom)] & (~figures);
 
-                while (bbTo) {
-                    bitboard positionTo = (bbTo & -bbTo);
-                    moves.push_back({positionFrom, positionTo});
-                    bbTo ^= positionTo;
+            bbFrom ^= positionFrom;
+        }
+        bbFrom = (color == WHITE) ? wPawns : bPawns;
+        while (bbFrom) {
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            bitboard bitNumber = BitBoard::bitNumberFromBitBoard(positionFrom);
+            bitboard bbTo = (color == WHITE) ? WHITE_PAWNS_SHORT_MOVES[bitNumber] & (~figures)
+                                             : BLACK_PAWNS_SHORT_MOVES[bitNumber] & (~figures);
+            int numberRow = (bitNumber >> 3);
+
+            while (bbTo) {
+                bitboard positionTo = (bbTo & -bbTo);
+                moves.push_back({positionFrom, positionTo});
+                if (numberRow == 1 && color == BLACK || numberRow == 6 && color == WHITE) {
+                    bitboard positionTo2 = (color == WHITE) ? WHITE_PAWNS_LONG_MOVES[bitNumber] & (~figures) : BLACK_PAWNS_LONG_MOVES[bitNumber] & (~figures);
+                    if (positionTo2) {
+                        moves.push_back({positionFrom, positionTo2});
+                    }
                 }
-
-                bbFrom ^= positionFrom;
+                bbTo ^= positionTo;
             }
+
+            bbFrom ^= positionFrom;
         }
 
         return moves;

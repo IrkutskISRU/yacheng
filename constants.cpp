@@ -25,7 +25,9 @@ namespace Constants {
                 }
             }
             std::cout << result << ", ";
-            if (i%8 == 7) std::cout << "\n";
+            if (i%8 == 7) {
+                std::cout << "\n";
+            }
 //            BitBoard::print(result);
 //            std::cout << "\n";
         }
@@ -36,32 +38,90 @@ namespace Constants {
 
         for (int i = 0; i < 64; i++) {
             bitboard result = 0;
-            if (i % 8 != 0)
+            if (i % 8 != 0) {
                 result += 1ull << (i - 1);
-            if (i % 8 != 7)
+            }
+            if (i % 8 != 7) {
                 result += 1ull << (i + 1);
-            if (i / 8 != 0)
+            }
+            if (i / 8 != 0) {
                 result += 1ull << (i - 8);
-            if (i / 8 != 7)
+            }
+            if (i / 8 != 7) {
                 result += 1ull << (i + 8);
+            }
 
-            if (i % 8 != 0 && i / 8 != 0)
+            if (i % 8 != 0 && i / 8 != 0) {
                 result += 1ull << (i - 9);
-            if (i % 8 != 0 && i / 8 != 7)
+            }
+            if (i % 8 != 0 && i / 8 != 7) {
                 result += 1ull << (i + 7);
-            if (i % 8 != 7 && i / 8 != 0)
+            }
+            if (i % 8 != 7 && i / 8 != 0) {
                 result += 1ull << (i - 7);
-            if (i % 8 != 7 && i / 8 != 7)
+            }
+            if (i % 8 != 7 && i / 8 != 7) {
                 result += 1ull << (i + 9);
+            }
 
             std::cout << result << ", ";
-            if (i%8 == 7) std::cout << "\n";
+            if (i%8 == 7) {
+                std::cout << "\n";
+            }
 
         }
 
     }
 
+    void init_pawns() {
+        std::cout << "BLACK SHORT\n";
+        for (int i = 0; i < 64; i++) {
+            bitboard result = 0;
+
+            if (i / 8 != 7) {
+                result += (1ull << (i + 8));
+            }
+            std::cout << result << ", ";
+            if (i%8 == 7) std::cout << "\n";
+
+        }
+        std::cout << "BLACK LONG\n";
+        for (int i = 0; i < 64; i++) {
+            bitboard result = 0;
+
+            if (i / 8 == 1) {
+                result += (1ull << (i + 16));
+            }
+            std::cout << result << ", ";
+            if (i%8 == 7) std::cout << "\n";
+
+        }
+        std::cout << "WHITE SHORT\n";
+        for (int i = 0; i < 64; i++) {
+            bitboard result = 0;
+
+            if (i / 8 != 0) {
+                result += (1ull << (i - 8));
+            }
+
+//            BitBoard::print(result);
+//            std::cout << "\n";
+            std::cout << result << ", ";
+            if (i%8 == 7) std::cout << "\n";
+        }
+        std::cout << "WHITE LONG\n";
+        for (int i = 0; i < 64; i++) {
+            bitboard result = 0;
+
+            if (i / 8 == 6) {
+                result += (1ull << (i - 16));
+            }
+            std::cout << result << ", ";
+            if (i%8 == 7) std::cout << "\n";
+
+        }
+    }
+
     void init() {
-//        init_knights();
     }
 }
