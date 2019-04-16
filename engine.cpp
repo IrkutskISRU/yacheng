@@ -4,24 +4,6 @@
 #define INIT(bitboard) bitboard = position.bitboard;
 #define INIT_FIGURE(bitboard, figureIndex) figuresArray[figureIndex] = position.bitboard;
 
-#define FIGURE_CASE(figure, colorFigures) if (figure & mv.from) { \
-figure ^= mv.from;                                      \
-figure ^= mv.to;                                        \
-colorFigures ^= mv.from;                                \
-colorFigures ^= mv.to;                                  \
-figures ^= mv.from;                                     \
-figures ^= mv.to;                                       \
-}
-
-#define UNDO_FIGURE_CASE(figure, colorFigures) if (figure & mv.to) { \
-figure ^= mv.from;                                      \
-figure ^= mv.to;                                        \
-colorFigures ^= mv.from;                                \
-colorFigures ^= mv.to;                                  \
-figures ^= mv.from;                                     \
-figures ^= mv.to;                                       \
-}\
-
 #include "bitboard.h"
 #include "engine.h"
 #include "bitboard_precalc.h"
@@ -36,17 +18,12 @@ struct figure {
 
 namespace Engine {
     const ull MASK = 255;
-//    bitboard wKings, wQueens, wRooks, wBishops, wKnights, wPawns;
-//    bitboard bKings, bQueens, bRooks, bBishops, bKnights, bPawns;
-    bitboard wFigures, bFigures, figures;
+    bitboard wFigures, bFigures, figures, figures_ver, figures_dia1, figures_dia2;
     bitboard figuresArray[10];
 
-//    int color;
     vector<ll> visitedPositionsCnt = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     bool castleQ, castleK, castleq, castlek;
     string enPassant;
-
-    std::list<figure> figuresList;
 
     struct move {
         int figure;
@@ -69,6 +46,8 @@ namespace Engine {
             colorFigures ^= mv.to;
             figures ^= mv.from;
             figures ^= mv.to;
+            figures_ver ^= (1ull << BitBoardPrecalc::to_ver[BitBoard::bitNumberFromBitBoard(mv.from)]);
+            figures_ver ^= (1ull << BitBoardPrecalc::to_ver[BitBoard::bitNumberFromBitBoard(mv.to)]);
         }
 
     }
@@ -82,6 +61,9 @@ namespace Engine {
             colorFigures ^= mv.to;
             figures ^= mv.from;
             figures ^= mv.to;
+
+            figures_ver ^= (1ull << BitBoardPrecalc::to_ver[BitBoard::bitNumberFromBitBoard(mv.from)]);
+            figures_ver ^= (1ull << BitBoardPrecalc::to_ver[BitBoard::bitNumberFromBitBoard(mv.to)]);
         }
     }
 
@@ -109,6 +91,7 @@ namespace Engine {
         bFigures = (figuresArray[BLACK_KING] | figuresArray[BLACK_QUEEN] | figuresArray[BLACK_ROOK] | figuresArray[BLACK_BISHOP] | figuresArray[BLACK_KNIGHT] | figuresArray[BLACK_PAWN]);
 
         figures = (bFigures | wFigures);
+        figures_ver = BitBoard::conv_to_ver(figures);
 
         for (int i = 0; i < 15; i++) {
             visitedPositionsCnt[i] = 0ll;
@@ -173,11 +156,6 @@ namespace Engine {
 
             bbFrom ^= positionFrom;
         }
-/*
-        int frbb = frombb(p);
-        ull h = (frbb >> 3) << 3;
-        ull msk = ((figures >> h) & MASK);
-        ull x2 = (hor[frbb][msk]&(~figures));*/
 
         bbFrom = (color == WHITE) ? (figuresArray[WHITE_ROOK] | figuresArray[WHITE_QUEEN]) : (figuresArray[BLACK_ROOK] | figuresArray[BLACK_QUEEN]);
         while (bbFrom) {
@@ -206,6 +184,32 @@ namespace Engine {
             bbFrom ^= positionFrom;
         }
 
+        bbFrom = (color == WHITE) ? (figuresArray[WHITE_ROOK] | figuresArray[WHITE_QUEEN]) : (figuresArray[BLACK_ROOK] | figuresArray[BLACK_QUEEN]);
+        while (bbFrom) {
+
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            int bitNumber = BitBoard::bitNumberFromBitBoard(positionFrom);
+            ull vertical = (bitNumber & 7) << 3;
+            ull mask = ((figures_ver >> vertical) & MASK);
+            bitboard bbTo = (BitBoardPrecalc::ver[bitNumber][mask] & (~figures));
+
+            while (bbTo) {
+                bitboard positionTo = (bbTo & -bbTo);
+                int figure = WHITE_ROOK;
+                if (figuresArray[BLACK_ROOK] & positionFrom) {
+                    figure = BLACK_ROOK;
+                } else if (figuresArray[WHITE_QUEEN] & positionFrom) {
+                    figure = WHITE_QUEEN;
+                } else if (figuresArray[BLACK_QUEEN] & positionFrom) {
+                    figure = BLACK_QUEEN;
+                }
+                moves.push_back({figure, positionFrom, positionTo});
+
+                bbTo ^= positionTo;
+            }
+
+            bbFrom ^= positionFrom;
+        }
 
         return moves;
 

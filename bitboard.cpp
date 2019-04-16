@@ -47,5 +47,12 @@ namespace BitBoard {
 
     }
 
+    bitboard conv_to_ver(bitboard x)
+    {
+        ull x2 = 0;
+        for (int i = 0; i < 64; i++)
+        if (x & (1ull << i)) x2 += (1ull << BitBoardPrecalc::to_ver[i]);
+        return x2;
+    }
 }
 

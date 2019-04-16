@@ -3,6 +3,7 @@
 //
 #pragma once
 #include "types.h"
+#include "bitboard_precalc.h"
 
 namespace BitBoard {
 
@@ -12,5 +13,7 @@ namespace BitBoard {
     bitboard print(bitboard bb);
     int bitNumberFromBitBoard(bitboard bb);
     void initDecode();
+
+    bitboard conv_to_ver(bitboard x);
 
 }

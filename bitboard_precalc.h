@@ -12,4 +12,6 @@ namespace BitBoardPrecalc {
     static bitboard dia1[64][256];
     static bitboard dia2[64][256];
 
+    const vector <int> to_ver = Precalc::precalc_to_ver();
+
 }

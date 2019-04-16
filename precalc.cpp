@@ -74,4 +74,15 @@ namespace Precalc {
 
         return result;
     }
+
+    vector <int> precalc_to_ver() {
+        vector <int> result;
+        for (int i = 0; i < 64; i++) {
+            int x1 = i / 8;
+            int x2 = i % 8;
+            result.push_back(x1 + x2 * 8);
+
+        }
+        return result;
+    }
 }
