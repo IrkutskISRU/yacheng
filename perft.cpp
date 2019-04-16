@@ -19,7 +19,7 @@ void testCase::print() {
     cout << "========================\n";
     cout << "TESTCASE: " << name << "\n";
     position.print();
-    cout << "ANSWERS: ";
+    cout << "ANSWERS          : ";
     for (auto item: v)
         cout << item << " ";
     cout << "\n";
