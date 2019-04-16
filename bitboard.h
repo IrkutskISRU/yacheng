@@ -15,5 +15,7 @@ namespace BitBoard {
     void initDecode();
 
     bitboard conv_to_ver(bitboard x);
+    bitboard conv_to_dia1(bitboard x);
+    bitboard conv_to_dia2(bitboard x);
 
 }

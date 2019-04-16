@@ -54,5 +54,17 @@ namespace BitBoard {
         if (x & (1ull << i)) x2 += (1ull << BitBoardPrecalc::to_ver[i]);
         return x2;
     }
+    bitboard conv_to_dia1(bitboard x) {
+        ull x2 = 0;
+        for (int i = 0; i < 64; i++)
+            if (x & (1ull << i)) x2 += (1ull << BitBoardPrecalc::to_dia1[i]);
+        return x2;
+    }
+    bitboard conv_to_dia2(bitboard x) {
+        ull x2 = 0;
+        for (int i = 0; i < 64; i++)
+            if (x & (1ull << i)) x2 += (1ull << BitBoardPrecalc::to_dia2[i]);
+        return x2;
+    }
 }
 

@@ -9,9 +9,11 @@
 namespace BitBoardPrecalc {
     const vector <vector <bitboard> > hor = Precalc::precalc_hor();
     const vector <vector <bitboard> > ver = Precalc::precalc_ver();
-    static bitboard dia1[64][256];
-    static bitboard dia2[64][256];
+    const vector <vector <bitboard> > dia1 = Precalc::precalc_dia1();
+    const vector <vector <bitboard> > dia2 = Precalc::precalc_dia2();
 
     const vector <int> to_ver = Precalc::precalc_to_ver();
+    const vector <int> to_dia1 = Precalc::precalc_to_dia1();
+    const vector <int> to_dia2 = Precalc::precalc_to_dia2();
 
 }

@@ -48,6 +48,12 @@ namespace Engine {
             figures ^= mv.to;
             figures_ver ^= (1ull << BitBoardPrecalc::to_ver[BitBoard::bitNumberFromBitBoard(mv.from)]);
             figures_ver ^= (1ull << BitBoardPrecalc::to_ver[BitBoard::bitNumberFromBitBoard(mv.to)]);
+
+            figures_dia1 ^= (1ull << BitBoardPrecalc::to_dia1[BitBoard::bitNumberFromBitBoard(mv.from)]);
+            figures_dia1 ^= (1ull << BitBoardPrecalc::to_dia1[BitBoard::bitNumberFromBitBoard(mv.to)]);
+
+            figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[BitBoard::bitNumberFromBitBoard(mv.from)]);
+            figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[BitBoard::bitNumberFromBitBoard(mv.to)]);
         }
 
     }
@@ -64,6 +70,12 @@ namespace Engine {
 
             figures_ver ^= (1ull << BitBoardPrecalc::to_ver[BitBoard::bitNumberFromBitBoard(mv.from)]);
             figures_ver ^= (1ull << BitBoardPrecalc::to_ver[BitBoard::bitNumberFromBitBoard(mv.to)]);
+
+            figures_dia1 ^= (1ull << BitBoardPrecalc::to_dia1[BitBoard::bitNumberFromBitBoard(mv.from)]);
+            figures_dia1 ^= (1ull << BitBoardPrecalc::to_dia1[BitBoard::bitNumberFromBitBoard(mv.to)]);
+
+            figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[BitBoard::bitNumberFromBitBoard(mv.from)]);
+            figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[BitBoard::bitNumberFromBitBoard(mv.to)]);
         }
     }
 
@@ -92,6 +104,8 @@ namespace Engine {
 
         figures = (bFigures | wFigures);
         figures_ver = BitBoard::conv_to_ver(figures);
+        figures_dia1 = BitBoard::conv_to_dia1(figures);
+        figures_dia2 = BitBoard::conv_to_dia2(figures);
 
         for (int i = 0; i < 15; i++) {
             visitedPositionsCnt[i] = 0ll;
@@ -198,6 +212,59 @@ namespace Engine {
                 int figure = WHITE_ROOK;
                 if (figuresArray[BLACK_ROOK] & positionFrom) {
                     figure = BLACK_ROOK;
+                } else if (figuresArray[WHITE_QUEEN] & positionFrom) {
+                    figure = WHITE_QUEEN;
+                } else if (figuresArray[BLACK_QUEEN] & positionFrom) {
+                    figure = BLACK_QUEEN;
+                }
+                moves.push_back({figure, positionFrom, positionTo});
+
+                bbTo ^= positionTo;
+            }
+
+            bbFrom ^= positionFrom;
+        }
+
+        bbFrom = (color == WHITE) ? (figuresArray[WHITE_BISHOP] | figuresArray[WHITE_QUEEN]) : (figuresArray[BLACK_BISHOP] | figuresArray[BLACK_QUEEN]);
+        while (bbFrom) {
+
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            int bitNumber = BitBoard::bitNumberFromBitBoard(positionFrom);
+            ull diagonal1 = (bitNumber & 7) + (bitNumber >> 3);
+            ull mask = (figures_dia1 >> (SHIFT_DIA1[diagonal1])&(AND_DIA1[diagonal1]));
+            bitboard bbTo = (BitBoardPrecalc::dia1[bitNumber][mask] & (~figures));
+
+            while (bbTo) {
+                bitboard positionTo = (bbTo & -bbTo);
+                int figure = WHITE_BISHOP;
+                if (figuresArray[BLACK_BISHOP] & positionFrom) {
+                    figure = BLACK_BISHOP;
+                } else if (figuresArray[WHITE_QUEEN] & positionFrom) {
+                    figure = WHITE_QUEEN;
+                } else if (figuresArray[BLACK_QUEEN] & positionFrom) {
+                    figure = BLACK_QUEEN;
+                }
+                moves.push_back({figure, positionFrom, positionTo});
+
+                bbTo ^= positionTo;
+            }
+
+            bbFrom ^= positionFrom;
+        }
+
+        bbFrom = (color == WHITE) ? (figuresArray[WHITE_BISHOP] | figuresArray[WHITE_QUEEN]) : (figuresArray[BLACK_BISHOP] | figuresArray[BLACK_QUEEN]);
+        while (bbFrom) {
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            int bitNumber = BitBoard::bitNumberFromBitBoard(positionFrom);
+            ull diagonal2 = (bitNumber & 7) - (bitNumber >> 3);
+            ull mask = (figures_dia2 >> (SHIFT_DIA1[diagonal2 + 7])&(AND_DIA1[diagonal2 + 7]));
+            bitboard bbTo = (BitBoardPrecalc::dia2[bitNumber][mask] & (~figures));
+
+            while (bbTo) {
+                bitboard positionTo = (bbTo & -bbTo);
+                int figure = WHITE_BISHOP;
+                if (figuresArray[BLACK_BISHOP] & positionFrom) {
+                    figure = BLACK_BISHOP;
                 } else if (figuresArray[WHITE_QUEEN] & positionFrom) {
                     figure = WHITE_QUEEN;
                 } else if (figuresArray[BLACK_QUEEN] & positionFrom) {
