@@ -8,7 +8,7 @@
 
 namespace Constants {
 
-    void init_knights() {
+    void initKnights() {
 
         for (int i = 0; i < 64; i++) {
             bitboard result = 0;
@@ -34,7 +34,7 @@ namespace Constants {
 
     }
 
-    void init_queens() {
+    void initQueens() {
 
         for (int i = 0; i < 64; i++) {
             bitboard result = 0;
@@ -73,7 +73,7 @@ namespace Constants {
 
     }
 
-    void init_pawns() {
+    void initPawns() {
         std::cout << "BLACK SHORT\n";
         for (int i = 0; i < 64; i++) {
             bitboard result = 0;
@@ -121,6 +121,45 @@ namespace Constants {
 
         }
     }
+
+    void initPawnsChop() {
+        std::cout << "BLACK\n";
+        for (int i = 0; i < 64; i++) {
+            bitboard result = 0;
+
+            if (i / 8 != 7) {
+                if (i % 8 != 0) {
+                    result += (1ull << (i + 7));
+                }
+                if (i % 8 != 7) {
+                    result += (1ull << (i + 9));
+                }
+            }
+
+            std::cout << result << ", ";
+            if (i%8 == 7) std::cout << "\n";
+
+        }
+
+        std::cout << "WHITE\n";
+        for (int i = 0; i < 64; i++) {
+            bitboard result = 0;
+
+            if (i / 8 != 0) {
+                if (i % 8 != 0) {
+                    result += (1ull << (i - 9));
+                }
+                if (i % 8 != 7) {
+                    result += (1ull << (i - 7));
+                }
+            }
+
+            std::cout << result << ", ";
+            if (i%8 == 7) std::cout << "\n";
+        }
+
+    }
+
 
     void init() {
     }

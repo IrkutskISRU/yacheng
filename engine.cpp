@@ -2,7 +2,12 @@
 // Created by artyom-m on 3/21/19.
 //
 #define INIT(bitboard) bitboard = position.bitboard;
-#define INIT_FIGURE(bitboard, figureIndex) figuresArray[figureIndex] = position.bitboard;
+#define INIT_FIGURE(bitboard, figureIndex) figuresArray[figureIndex] = position.bitboard;\
+for (int i = 0; i < 64; i++) {               \
+    if ((1ull << i) & position.bitboard) {   \
+        board[i] = figureIndex;              \
+    }                                        \
+}                                            \
 
 #include "bitboard.h"
 #include "engine.h"
@@ -19,9 +24,11 @@ struct figure {
 namespace Engine {
     const ull MASK = 255;
     bitboard wFigures, bFigures, figures, figures_ver, figures_dia1, figures_dia2;
-    bitboard figuresArray[10];
+    bitboard figuresArray[1000];
+    int board[64];
 
     vector<ll> visitedPositionsCnt = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    int capturesCnt = 0;
     bool castleQ, castleK, castleq, castlek;
     string enPassant;
 
@@ -39,47 +46,86 @@ namespace Engine {
 
     inline void doMove(move mv, int color) {
         bitboard &colorFigures = (color == WHITE) ? wFigures : bFigures;
-        if (figuresArray[mv.figure] & mv.from) {
-            figuresArray[mv.figure] ^= mv.from;
-            figuresArray[mv.figure] ^= mv.to;
-            colorFigures ^= mv.from;
-            colorFigures ^= mv.to;
-            figures ^= mv.from;
+        bitboard &enemyFigures = (color == WHITE) ? bFigures : wFigures;
+
+        int bitFrom = BitBoard::bitNumberFromBitBoard(mv.from);
+        int bitTo = BitBoard::bitNumberFromBitBoard(mv.to);
+
+        int chopped = board[bitTo];
+        board[bitTo] = board[bitFrom];
+        board[bitFrom] = 0;
+
+        figuresArray[mv.figure] ^= mv.from;
+        figuresArray[mv.figure] ^= mv.to;
+
+        if (chopped) {
+
+            enemyFigures ^= mv.to;
+            figuresArray[chopped] ^= mv.to;
             figures ^= mv.to;
-            figures_ver ^= (1ull << BitBoardPrecalc::to_ver[BitBoard::bitNumberFromBitBoard(mv.from)]);
-            figures_ver ^= (1ull << BitBoardPrecalc::to_ver[BitBoard::bitNumberFromBitBoard(mv.to)]);
-
-            figures_dia1 ^= (1ull << BitBoardPrecalc::to_dia1[BitBoard::bitNumberFromBitBoard(mv.from)]);
-            figures_dia1 ^= (1ull << BitBoardPrecalc::to_dia1[BitBoard::bitNumberFromBitBoard(mv.to)]);
-
-            figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[BitBoard::bitNumberFromBitBoard(mv.from)]);
-            figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[BitBoard::bitNumberFromBitBoard(mv.to)]);
+            figures_ver ^= (1ull << BitBoardPrecalc::to_ver[bitTo]);
+            figures_dia1 ^= (1ull << BitBoardPrecalc::to_dia1[bitTo]);
+            figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[bitTo]);
         }
+
+        colorFigures ^= mv.from;
+        colorFigures ^= mv.to;
+        figures ^= mv.from;
+        figures ^= mv.to;
+        figures_ver ^= (1ull << BitBoardPrecalc::to_ver[bitFrom]);
+        figures_ver ^= (1ull << BitBoardPrecalc::to_ver[bitTo]);
+
+        figures_dia1 ^= (1ull << BitBoardPrecalc::to_dia1[bitFrom]);
+        figures_dia1 ^= (1ull << BitBoardPrecalc::to_dia1[bitTo]);
+
+        figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[bitFrom]);
+        figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[bitTo]);
+
 
     }
 
-    inline void undoMove(move mv, int color) {
+    inline void undoMove(move mv, int color, int chopped) {
         bitboard &colorFigures = (color == WHITE) ? wFigures : bFigures;
-        if (figuresArray[mv.figure] & mv.to) {
-            figuresArray[mv.figure] ^= mv.from;
-            figuresArray[mv.figure] ^= mv.to;
-            colorFigures ^= mv.from;
-            colorFigures ^= mv.to;
-            figures ^= mv.from;
+        bitboard &enemyFigures = (color == WHITE) ? bFigures : wFigures;
+        int bitFrom = BitBoard::bitNumberFromBitBoard(mv.from);
+        int bitTo = BitBoard::bitNumberFromBitBoard(mv.to);
+
+        board[bitFrom] = board[bitTo];
+        board[bitTo] = chopped;
+
+        figuresArray[mv.figure] ^= mv.from;
+        figuresArray[mv.figure] ^= mv.to;
+        colorFigures ^= mv.from;
+        colorFigures ^= mv.to;
+        figures ^= mv.from;
+        figures ^= mv.to;
+
+        if (chopped) {
+            enemyFigures ^= mv.to;
+            figuresArray[chopped] ^= mv.to;
             figures ^= mv.to;
-
-            figures_ver ^= (1ull << BitBoardPrecalc::to_ver[BitBoard::bitNumberFromBitBoard(mv.from)]);
-            figures_ver ^= (1ull << BitBoardPrecalc::to_ver[BitBoard::bitNumberFromBitBoard(mv.to)]);
-
-            figures_dia1 ^= (1ull << BitBoardPrecalc::to_dia1[BitBoard::bitNumberFromBitBoard(mv.from)]);
-            figures_dia1 ^= (1ull << BitBoardPrecalc::to_dia1[BitBoard::bitNumberFromBitBoard(mv.to)]);
-
-            figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[BitBoard::bitNumberFromBitBoard(mv.from)]);
-            figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[BitBoard::bitNumberFromBitBoard(mv.to)]);
+            figures_ver ^= (1ull << BitBoardPrecalc::to_ver[bitTo]);
+            figures_dia1 ^= (1ull << BitBoardPrecalc::to_dia1[bitTo]);
+            figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[bitTo]);
         }
+
+        figures_ver ^= (1ull << BitBoardPrecalc::to_ver[bitFrom]);
+        figures_ver ^= (1ull << BitBoardPrecalc::to_ver[bitTo]);
+
+        figures_dia1 ^= (1ull << BitBoardPrecalc::to_dia1[bitFrom]);
+        figures_dia1 ^= (1ull << BitBoardPrecalc::to_dia1[bitTo]);
+
+        figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[bitFrom]);
+        figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[bitTo]);
+
     }
 
     void init(EPD &position) {
+
+        for (int i = 0; i < 64; i++) {
+            board[i] = 0;
+        }
+
         INIT_FIGURE(wKings, WHITE_KING);
         INIT_FIGURE(wQueens, WHITE_QUEEN);
         INIT_FIGURE(wRooks, WHITE_ROOK);
@@ -110,10 +156,182 @@ namespace Engine {
         for (int i = 0; i < 15; i++) {
             visitedPositionsCnt[i] = 0ll;
         }
+
     };
 
-    inline list<move> generateMoves(int color) {
-        list<move> moves;
+    void generateAgressiveMoves(list<move>& moves, int color) {
+
+        int figure = (color == WHITE) ? WHITE_PAWN : BLACK_PAWN;
+        bitboard bbFrom = figuresArray[figure];
+
+        while (bbFrom) {
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            bitboard bbTo;
+            if (color == WHITE) {
+                bbTo = WHITE_PAWNS_CHOP[BitBoard::bitNumberFromBitBoard(positionFrom)] & (bFigures);
+            } else {
+                bbTo = BLACK_PAWNS_CHOP[BitBoard::bitNumberFromBitBoard(positionFrom)] & (wFigures);
+            }
+
+            while (bbTo) {
+                bitboard positionTo = (bbTo & -bbTo);
+                moves.push_back({figure, positionFrom, positionTo});
+
+                bbTo ^= positionTo;
+            }
+
+            bbFrom ^= positionFrom;
+        }
+
+        figure = (color == WHITE) ? WHITE_KNIGHT : BLACK_KNIGHT;
+        bbFrom = figuresArray[figure];
+        bitboard enemyFigures = (color == WHITE) ? bFigures : wFigures;
+
+        while (bbFrom) {
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            bitboard bbTo;
+
+            bbTo = KNIGHT_MOVES[BitBoard::bitNumberFromBitBoard(positionFrom)] & (enemyFigures);
+
+
+            while (bbTo) {
+                bitboard positionTo = (bbTo & -bbTo);
+                moves.push_back({figure, positionFrom, positionTo});
+
+                bbTo ^= positionTo;
+            }
+
+            bbFrom ^= positionFrom;
+        }
+
+        bbFrom = (color == WHITE) ? (figuresArray[WHITE_BISHOP] | figuresArray[WHITE_QUEEN]) : (figuresArray[BLACK_BISHOP] | figuresArray[BLACK_QUEEN]);
+        while (bbFrom) {
+
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            int bitNumber = BitBoard::bitNumberFromBitBoard(positionFrom);
+            ull diagonal1 = (bitNumber & 7) + (bitNumber >> 3);
+            ull mask = (figures_dia1 >> (SHIFT_DIA1[diagonal1])&(AND_DIA1[diagonal1]));
+            bitboard bbTo = (BitBoardPrecalc::dia1[bitNumber][mask] & (enemyFigures));
+
+            while (bbTo) {
+                bitboard positionTo = (bbTo & -bbTo);
+                int figure = WHITE_BISHOP;
+                if (figuresArray[BLACK_BISHOP] & positionFrom) {
+                    figure = BLACK_BISHOP;
+                } else if (figuresArray[WHITE_QUEEN] & positionFrom) {
+                    figure = WHITE_QUEEN;
+                } else if (figuresArray[BLACK_QUEEN] & positionFrom) {
+                    figure = BLACK_QUEEN;
+                }
+                moves.push_back({figure, positionFrom, positionTo});
+
+                bbTo ^= positionTo;
+            }
+
+            bbFrom ^= positionFrom;
+        }
+
+        bbFrom = (color == WHITE) ? (figuresArray[WHITE_BISHOP] | figuresArray[WHITE_QUEEN]) : (figuresArray[BLACK_BISHOP] | figuresArray[BLACK_QUEEN]);
+        while (bbFrom) {
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            int bitNumber = BitBoard::bitNumberFromBitBoard(positionFrom);
+            ull diagonal2 = (bitNumber & 7) - (bitNumber >> 3);
+            ull mask = (figures_dia2 >> (SHIFT_DIA1[diagonal2 + 7])&(AND_DIA1[diagonal2 + 7]));
+            bitboard bbTo = (BitBoardPrecalc::dia2[bitNumber][mask] & (enemyFigures));
+
+            while (bbTo) {
+                bitboard positionTo = (bbTo & -bbTo);
+                int figure = WHITE_BISHOP;
+                if (figuresArray[BLACK_BISHOP] & positionFrom) {
+                    figure = BLACK_BISHOP;
+                } else if (figuresArray[WHITE_QUEEN] & positionFrom) {
+                    figure = WHITE_QUEEN;
+                } else if (figuresArray[BLACK_QUEEN] & positionFrom) {
+                    figure = BLACK_QUEEN;
+                }
+                moves.push_back({figure, positionFrom, positionTo});
+
+                bbTo ^= positionTo;
+            }
+
+            bbFrom ^= positionFrom;
+        }
+
+        bbFrom = (color == WHITE) ? (figuresArray[WHITE_ROOK] | figuresArray[WHITE_QUEEN]) : (figuresArray[BLACK_ROOK] | figuresArray[BLACK_QUEEN]);
+        while (bbFrom) {
+
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            int bitNumber = BitBoard::bitNumberFromBitBoard(positionFrom);
+            ull horizontal = (bitNumber >> 3) << 3;
+            ull mask = ((figures >> horizontal) & MASK);
+            bitboard bbTo = (BitBoardPrecalc::hor[bitNumber][mask] & (enemyFigures));
+
+            while (bbTo) {
+                bitboard positionTo = (bbTo & -bbTo);
+                int figure = WHITE_ROOK;
+                if (figuresArray[BLACK_ROOK] & positionFrom) {
+                    figure = BLACK_ROOK;
+                } else if (figuresArray[WHITE_QUEEN] & positionFrom) {
+                    figure = WHITE_QUEEN;
+                } else if (figuresArray[BLACK_QUEEN] & positionFrom) {
+                    figure = BLACK_QUEEN;
+                }
+                moves.push_back({figure, positionFrom, positionTo});
+
+                bbTo ^= positionTo;
+            }
+
+            bbFrom ^= positionFrom;
+        }
+
+        bbFrom = (color == WHITE) ? (figuresArray[WHITE_ROOK] | figuresArray[WHITE_QUEEN]) : (figuresArray[BLACK_ROOK] | figuresArray[BLACK_QUEEN]);
+        while (bbFrom) {
+
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            int bitNumber = BitBoard::bitNumberFromBitBoard(positionFrom);
+            ull vertical = (bitNumber & 7) << 3;
+            ull mask = ((figures_ver >> vertical) & MASK);
+            bitboard bbTo = (BitBoardPrecalc::ver[bitNumber][mask] & (enemyFigures));
+
+            while (bbTo) {
+                bitboard positionTo = (bbTo & -bbTo);
+                int figure = WHITE_ROOK;
+                if (figuresArray[BLACK_ROOK] & positionFrom) {
+                    figure = BLACK_ROOK;
+                } else if (figuresArray[WHITE_QUEEN] & positionFrom) {
+                    figure = WHITE_QUEEN;
+                } else if (figuresArray[BLACK_QUEEN] & positionFrom) {
+                    figure = BLACK_QUEEN;
+                }
+                moves.push_back({figure, positionFrom, positionTo});
+
+                bbTo ^= positionTo;
+            }
+
+            bbFrom ^= positionFrom;
+        }
+
+        figure = (color == WHITE) ? WHITE_KING : BLACK_KING;
+        bbFrom = figuresArray[figure];
+
+        while (bbFrom) {
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            bitboard bbTo = KING_MOVES[BitBoard::bitNumberFromBitBoard(positionFrom)] & (enemyFigures);
+
+            while (bbTo) {
+                bitboard positionTo = (bbTo & -bbTo);
+                moves.push_back({figure, positionFrom, positionTo});
+
+                bbTo ^= positionTo;
+            }
+
+            bbFrom ^= positionFrom;
+        }
+
+
+    }
+
+    inline void generateSilentMoves(list<move> &moves, int color) {
 
         int figure = (color == WHITE) ? WHITE_KING : BLACK_KING;
         bitboard bbFrom = figuresArray[figure];
@@ -131,6 +349,7 @@ namespace Engine {
 
             bbFrom ^= positionFrom;
         }
+
         figure = (color == WHITE) ? WHITE_KNIGHT : BLACK_KNIGHT;
         bbFrom = figuresArray[figure];
 
@@ -278,8 +497,6 @@ namespace Engine {
             bbFrom ^= positionFrom;
         }
 
-        return moves;
-
     }
 
     void alphabeta(int color, int depth, int alpha, int beta) {
@@ -287,15 +504,26 @@ namespace Engine {
         if (depth == 0) {
             return;
         }
-        list<move> moves = generateMoves(color);
+        list<move> moves;
+        generateAgressiveMoves(moves, color);
+        generateSilentMoves(moves, color);
 
         for (auto mv: moves) {
 
+            int chopped = board[BitBoard::bitNumberFromBitBoard(mv.to)];
+
+//            if (chopped != 0) {
+//                capturesCnt ++;
+//                cout << capturesCnt << " " << mv.figure << " " << chopped << "\n";
+//                BitBoard::print(figures);
+//                cout << "\n";
+//            }
             doMove(mv, color);
 
             alphabeta(color ^ WHITE_BLACK, depth - 1, -beta, -alpha);
 
-            undoMove(mv, color);
+            undoMove(mv, color, chopped);
+
         }
 
     }
