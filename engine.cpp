@@ -159,6 +159,108 @@ namespace Engine {
 
     };
 
+    inline bool isCheck(int color) {
+        bitboard kingPos = (color == WHITE) ? figuresArray[WHITE_KING] : figuresArray[BLACK_KING];
+        bitboard bbFrom = (color == BLACK) ? (figuresArray[WHITE_BISHOP] | figuresArray[WHITE_QUEEN]) : (figuresArray[BLACK_BISHOP] | figuresArray[BLACK_QUEEN]);
+        while (bbFrom) {
+
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            int bitNumber = BitBoard::bitNumberFromBitBoard(positionFrom);
+            ull diagonal1 = (bitNumber & 7) + (bitNumber >> 3);
+            ull mask = (figures_dia1 >> (SHIFT_DIA1[diagonal1])&(AND_DIA1[diagonal1]));
+            bitboard bbTo = (BitBoardPrecalc::dia1[bitNumber][mask] & (kingPos));
+
+            if (bbTo) return true;
+
+            bbFrom ^= positionFrom;
+        }
+
+        bbFrom = (color == BLACK) ? (figuresArray[WHITE_BISHOP] | figuresArray[WHITE_QUEEN]) : (figuresArray[BLACK_BISHOP] | figuresArray[BLACK_QUEEN]);
+        while (bbFrom) {
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            int bitNumber = BitBoard::bitNumberFromBitBoard(positionFrom);
+            ull diagonal2 = (bitNumber & 7) - (bitNumber >> 3);
+            ull mask = (figures_dia2 >> (SHIFT_DIA1[diagonal2 + 7])&(AND_DIA1[diagonal2 + 7]));
+            bitboard bbTo = (BitBoardPrecalc::dia2[bitNumber][mask] & (kingPos));
+
+            if (bbTo) return true;
+
+            bbFrom ^= positionFrom;
+        }
+
+        bitboard figure = (color == BLACK) ? WHITE_KNIGHT : BLACK_KNIGHT;
+        bbFrom = figuresArray[figure];
+        while (bbFrom) {
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            bitboard bbTo;
+
+            bbTo = KNIGHT_MOVES[BitBoard::bitNumberFromBitBoard(positionFrom)] & (kingPos);
+            if (bbTo) return true;
+
+            bbFrom ^= positionFrom;
+        }
+
+        bbFrom = (color == BLACK) ? (figuresArray[WHITE_ROOK] | figuresArray[WHITE_QUEEN]) : (figuresArray[BLACK_ROOK] | figuresArray[BLACK_QUEEN]);
+        while (bbFrom) {
+
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            int bitNumber = BitBoard::bitNumberFromBitBoard(positionFrom);
+            ull horizontal = (bitNumber >> 3) << 3;
+            ull mask = ((figures >> horizontal) & MASK);
+            bitboard bbTo = (BitBoardPrecalc::hor[bitNumber][mask] & (kingPos));
+
+            if (bbTo) return true;
+
+            bbFrom ^= positionFrom;
+        }
+
+        bbFrom = (color == BLACK) ? (figuresArray[WHITE_ROOK] | figuresArray[WHITE_QUEEN]) : (figuresArray[BLACK_ROOK] | figuresArray[BLACK_QUEEN]);
+        while (bbFrom) {
+
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            int bitNumber = BitBoard::bitNumberFromBitBoard(positionFrom);
+            ull vertical = (bitNumber & 7) << 3;
+            ull mask = ((figures_ver >> vertical) & MASK);
+            bitboard bbTo = (BitBoardPrecalc::ver[bitNumber][mask] & (kingPos));
+
+            if (bbTo) return true;
+
+            bbFrom ^= positionFrom;
+        }
+
+
+        figure = (color == BLACK) ? WHITE_PAWN : BLACK_PAWN;
+        bbFrom = figuresArray[figure];
+
+        while (bbFrom) {
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            bitboard bbTo;
+            if (color == BLACK) {
+                bbTo = WHITE_PAWNS_CHOP[BitBoard::bitNumberFromBitBoard(positionFrom)] & (kingPos);
+            } else {
+                bbTo = BLACK_PAWNS_CHOP[BitBoard::bitNumberFromBitBoard(positionFrom)] & (kingPos);
+            }
+
+            if (bbTo) return true;
+
+            bbFrom ^= positionFrom;
+        }
+
+        figure = (color == BLACK) ? WHITE_KING : BLACK_KING;
+        bbFrom = figuresArray[figure];
+
+        while (bbFrom) {
+            bitboard positionFrom = (bbFrom & -bbFrom);
+            bitboard bbTo = KING_MOVES[BitBoard::bitNumberFromBitBoard(positionFrom)] & (kingPos);
+
+            if (bbTo) return true;
+
+            bbFrom ^= positionFrom;
+        }
+
+        return false;
+    }
+
     void generateAgressiveMoves(list<move>& moves, int color) {
 
         int figure = (color == WHITE) ? WHITE_PAWN : BLACK_PAWN;
@@ -512,17 +614,12 @@ namespace Engine {
 
             int chopped = board[BitBoard::bitNumberFromBitBoard(mv.to)];
 
-//            if (chopped != 0) {
-//                capturesCnt ++;
-//                cout << capturesCnt << " " << mv.figure << " " << chopped << "\n";
-//                BitBoard::print(figures);
-//                cout << "\n";
-//            }
             doMove(mv, color);
-
-            alphabeta(color ^ WHITE_BLACK, depth - 1, -beta, -alpha);
-
+            if (!isCheck(color)) {
+                alphabeta(color ^ WHITE_BLACK, depth - 1, -beta, -alpha);
+            }
             undoMove(mv, color, chopped);
+
 
         }
 
