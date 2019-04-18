@@ -15,6 +15,14 @@ for (int i = 0; i < 64; i++) {               \
 #include <list>
 #include <vector>
 
+string toHuman[64] = {"a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
+                      "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
+                      "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
+                      "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
+                      "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
+                      "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
+                      "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
+                      "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",};
 
 struct figure {
     int type;
@@ -29,27 +37,62 @@ namespace Engine {
 
     vector<ll> visitedPositionsCnt = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     int capturesCnt = 0;
+    int enPassentCnt = 0;
     bool castleQ, castleK, castleq, castlek;
-    string enPassant;
+    bitboard enPassant;
+    bitboard facticalPawn;
 
     struct move {
         int figure;
         bitboard from;
         bitboard to;
+        bool enPassant;
 
-        move(int Figure, bitboard From, bitboard To) :
+        move(int Figure, bitboard From, bitboard To, bool EnPassant = false) :
                 figure(Figure),
                 from(From),
-                to(To) {
+                to(To),
+                enPassant(EnPassant) {
         }
     };
 
     inline void doMove(move mv, int color) {
+
+        bitboard enPassantOrig = enPassant;
+        bitboard facticalPawnOrig = facticalPawn;
+
+
+        enPassant = 0;
+        facticalPawn = 0;
+
         bitboard &colorFigures = (color == WHITE) ? wFigures : bFigures;
         bitboard &enemyFigures = (color == WHITE) ? bFigures : wFigures;
 
         int bitFrom = BitBoard::bitNumberFromBitBoard(mv.from);
         int bitTo = BitBoard::bitNumberFromBitBoard(mv.to);
+
+        if ((mv.figure == WHITE_PAWN || mv.figure == BLACK_PAWN) && (bitFrom == bitTo + 16 || bitTo == bitFrom + 16)) {
+            if (bitTo > bitFrom) {
+                enPassant = 1ull << (bitFrom + 8);
+            } else {
+                enPassant = 1ull << (bitTo + 8);
+            }
+            facticalPawn = 1ull << (bitTo);
+        }
+
+        if (mv.enPassant) {
+            int bitFactical = BitBoard::bitNumberFromBitBoard(facticalPawnOrig);
+            int bitPassant = BitBoard::bitNumberFromBitBoard(enPassantOrig);
+
+            int enemyPawn = (color == WHITE) ? BLACK_PAWN : WHITE_PAWN;
+            figuresArray[enemyPawn] ^= (facticalPawnOrig ^ enPassantOrig);
+            swap(board[bitFactical], board[bitPassant]);
+            enemyFigures ^= (facticalPawnOrig ^ enPassantOrig);
+            figures ^= (facticalPawnOrig ^ enPassantOrig);
+            figures_ver ^= ((1ull << BitBoardPrecalc::to_ver[bitFactical]) ^ (1ull << BitBoardPrecalc::to_ver[bitPassant]));
+            figures_dia1 ^= ((1ull << BitBoardPrecalc::to_dia1[bitFactical]) ^ (1ull << BitBoardPrecalc::to_dia1[bitPassant]));
+            figures_dia2 ^= ((1ull << BitBoardPrecalc::to_dia2[bitFactical]) ^ (1ull << BitBoardPrecalc::to_dia2[bitPassant]));
+        }
 
         int chopped = board[bitTo];
         board[bitTo] = board[bitFrom];
@@ -84,11 +127,12 @@ namespace Engine {
 
     }
 
-    inline void undoMove(move mv, int color, int chopped) {
+    inline void undoMove(move mv, int color, int chopped, bitboard oldEnPassant, bitboard oldFacticalPawn) {
         bitboard &colorFigures = (color == WHITE) ? wFigures : bFigures;
         bitboard &enemyFigures = (color == WHITE) ? bFigures : wFigures;
         int bitFrom = BitBoard::bitNumberFromBitBoard(mv.from);
         int bitTo = BitBoard::bitNumberFromBitBoard(mv.to);
+
 
         board[bitFrom] = board[bitTo];
         board[bitTo] = chopped;
@@ -118,6 +162,23 @@ namespace Engine {
         figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[bitFrom]);
         figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[bitTo]);
 
+        if (mv.enPassant) {
+
+            int enemyPawn = (color == WHITE) ? BLACK_PAWN : WHITE_PAWN;
+            figuresArray[enemyPawn] ^= (oldFacticalPawn ^ oldEnPassant);
+
+            int bitFactical = BitBoard::bitNumberFromBitBoard(oldFacticalPawn);
+            int bitPassant = BitBoard::bitNumberFromBitBoard(oldEnPassant);
+
+            swap(board[bitFactical], board[bitPassant]);
+            enemyFigures ^= (oldFacticalPawn ^ oldEnPassant);
+            figures ^= (oldFacticalPawn ^ oldEnPassant);
+
+            figures_ver ^= ((1ull << BitBoardPrecalc::to_ver[bitFactical]) ^ (1ull << BitBoardPrecalc::to_ver[bitPassant]));
+            figures_dia1 ^= ((1ull << BitBoardPrecalc::to_dia1[bitFactical]) ^ (1ull << BitBoardPrecalc::to_dia1[bitPassant]));
+            figures_dia2 ^= ((1ull << BitBoardPrecalc::to_dia2[bitFactical]) ^ (1ull << BitBoardPrecalc::to_dia2[bitPassant]));
+
+        }
     }
 
     void init(EPD &position) {
@@ -143,7 +204,20 @@ namespace Engine {
         INIT(castleK);
         INIT(castleq);
         INIT(castlek);
-        INIT(enPassant);
+//        INIT(enPassant);
+        enPassant = 0;
+        facticalPawn = 0;
+        if (position.enPassant != "-") {
+            char letter = position.enPassant[0];
+            char number = position.enPassant[1];
+            enPassant = (1ull) << (('8' - number) * 8 + (letter - 'a'));
+
+            if (number == '3') {
+                facticalPawn = (1ull) << (('8' - number - 1) * 8 + (letter - 'a'));
+            } else {
+                facticalPawn = (1ull) << (('8' - number + 1) * 8 + (letter - 'a'));
+            }
+        }
 
         wFigures = (figuresArray[WHITE_KING] | figuresArray[WHITE_QUEEN] | figuresArray[WHITE_ROOK] | figuresArray[WHITE_BISHOP] | figuresArray[WHITE_KNIGHT] | figuresArray[WHITE_PAWN]);
         bFigures = (figuresArray[BLACK_KING] | figuresArray[BLACK_QUEEN] | figuresArray[BLACK_ROOK] | figuresArray[BLACK_BISHOP] | figuresArray[BLACK_KNIGHT] | figuresArray[BLACK_PAWN]);
@@ -280,6 +354,19 @@ namespace Engine {
                 moves.push_back({figure, positionFrom, positionTo});
 
                 bbTo ^= positionTo;
+            }
+
+            if (enPassant) {
+                bbTo = 0;
+                if (color == WHITE) {
+                    bbTo = WHITE_PAWNS_CHOP[BitBoard::bitNumberFromBitBoard(positionFrom)] & (enPassant);
+                } else {
+                    bbTo = BLACK_PAWNS_CHOP[BitBoard::bitNumberFromBitBoard(positionFrom)] & (enPassant);
+                }
+
+                if (bbTo) {
+                    moves.push_back({figure, positionFrom, bbTo, true});
+                }
             }
 
             bbFrom ^= positionFrom;
@@ -603,6 +690,7 @@ namespace Engine {
 
     void alphabeta(int color, int depth, int alpha, int beta) {
         visitedPositionsCnt[depth] ++;
+
         if (depth == 0) {
             return;
         }
@@ -613,17 +701,32 @@ namespace Engine {
         for (auto mv: moves) {
 
             int chopped = board[BitBoard::bitNumberFromBitBoard(mv.to)];
-
+            bitboard oldEnPassant = enPassant;
+            bitboard oldFacticalPawn = facticalPawn;
             doMove(mv, color);
             if (!isCheck(color)) {
+//                if (mv.enPassant) {
+//                    enPassentCnt++;
+//                    cout << enPassentCnt << " ";
+//                }
+
+//                if (depth == 1 && oldEnPassant)
+
+//                cout << mv.figure << " " << toHuman[BitBoard::bitNumberFromBitBoard(mv.from)] << " " << toHuman[BitBoard::bitNumberFromBitBoard(mv.to)] << "!\n";
                 alphabeta(color ^ WHITE_BLACK, depth - 1, -beta, -alpha);
             }
-            undoMove(mv, color, chopped);
+            if (mv.enPassant) {
+                chopped = (color == WHITE) ? BLACK_PAWN : WHITE_PAWN;
+            }
+            undoMove(mv, color, chopped, oldEnPassant, oldFacticalPawn);
+            enPassant = oldEnPassant;
+            facticalPawn = oldFacticalPawn;
 
 
         }
 
     }
+
 
     vector<ll> getVisitedPositionsCnt() {
        return visitedPositionsCnt;
