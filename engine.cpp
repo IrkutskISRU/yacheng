@@ -58,6 +58,55 @@ namespace Engine {
 
     inline void doMove(move mv, int color) {
 
+        if (mv.from == (1ull << 63)) {
+            castleK = false;
+        }
+        if (mv.from == (1ull << 60)) {
+            castleK = false;
+            castleQ = false;
+        }
+        if (mv.from == (1ull << 56)) {
+            castleQ = false;
+        }
+        if (mv.from == (1ull << 0)) {
+            castleq = false;
+        }
+        if (mv.from == (1ull << 4)) {
+            castlek = false;
+            castleq = false;
+        }
+        if (mv.from == (1ull << 7)) {
+            castlek = false;
+        }
+
+        if (mv.figure == 100) {
+            doMove({WHITE_KING, (1ull) << 60, (1ull) << 62}, WHITE);
+            doMove({WHITE_ROOK, (1ull) << 63, (1ull) << 61}, WHITE);
+
+            return;
+        }
+
+        if (mv.figure == 200) {
+            doMove({WHITE_KING, (1ull) << 60, (1ull) << 58}, WHITE);
+            doMove({WHITE_ROOK, (1ull) << 56, (1ull) << 59}, WHITE);
+
+            return;
+        }
+
+        if (mv.figure == 300) {
+            doMove({BLACK_KING, (1ull) << 4, (1ull) << 6}, BLACK);
+            doMove({BLACK_ROOK, (1ull) << 7, (1ull) << 5}, BLACK);
+
+            return;
+        }
+
+        if (mv.figure == 400) {
+            doMove({BLACK_KING, (1ull) << 4, (1ull) << 2}, BLACK);
+            doMove({BLACK_ROOK, (1ull) << 0, (1ull) << 3}, BLACK);
+
+            return;
+        }
+
         bitboard enPassantOrig = enPassant;
         bitboard facticalPawnOrig = facticalPawn;
 
@@ -128,6 +177,34 @@ namespace Engine {
     }
 
     inline void undoMove(move mv, int color, int chopped, bitboard oldEnPassant, bitboard oldFacticalPawn) {
+
+        if (mv.figure == 100) {
+            undoMove({WHITE_KING, (1ull) << 60, (1ull) << 62}, WHITE, 0, 0, 0);
+            undoMove({WHITE_ROOK, (1ull) << 63, (1ull) << 61}, WHITE, 0, 0, 0);
+
+            return;
+        }
+
+        if (mv.figure == 200) {
+            undoMove({WHITE_KING, (1ull) << 60, (1ull) << 58}, WHITE, 0, 0, 0);
+            undoMove({WHITE_ROOK, (1ull) << 56, (1ull) << 59}, WHITE, 0, 0, 0);
+
+            return;
+        }
+
+        if (mv.figure == 300) {
+            undoMove({BLACK_KING, (1ull) << 4, (1ull) << 6}, BLACK, 0, 0, 0);
+            undoMove({BLACK_ROOK, (1ull) << 7, (1ull) << 5}, BLACK, 0, 0, 0);
+
+            return;
+        }
+
+        if (mv.figure == 400) {
+            undoMove({BLACK_KING, (1ull) << 4, (1ull) << 2}, BLACK, 0, 0, 0);
+            undoMove({BLACK_ROOK, (1ull) << 0, (1ull) << 3}, BLACK, 0, 0, 0);
+
+            return;
+        }
         bitboard &colorFigures = (color == WHITE) ? wFigures : bFigures;
         bitboard &enemyFigures = (color == WHITE) ? bFigures : wFigures;
         int bitFrom = BitBoard::bitNumberFromBitBoard(mv.from);
@@ -233,8 +310,8 @@ namespace Engine {
 
     };
 
-    inline bool isCheck(int color) {
-        bitboard kingPos = (color == WHITE) ? figuresArray[WHITE_KING] : figuresArray[BLACK_KING];
+    inline bool isCheck(int color, bitboard figurePos) {
+
         bitboard bbFrom = (color == BLACK) ? (figuresArray[WHITE_BISHOP] | figuresArray[WHITE_QUEEN]) : (figuresArray[BLACK_BISHOP] | figuresArray[BLACK_QUEEN]);
         while (bbFrom) {
 
@@ -242,7 +319,7 @@ namespace Engine {
             int bitNumber = BitBoard::bitNumberFromBitBoard(positionFrom);
             ull diagonal1 = (bitNumber & 7) + (bitNumber >> 3);
             ull mask = (figures_dia1 >> (SHIFT_DIA1[diagonal1])&(AND_DIA1[diagonal1]));
-            bitboard bbTo = (BitBoardPrecalc::dia1[bitNumber][mask] & (kingPos));
+            bitboard bbTo = (BitBoardPrecalc::dia1[bitNumber][mask] & (figurePos));
 
             if (bbTo) return true;
 
@@ -255,7 +332,7 @@ namespace Engine {
             int bitNumber = BitBoard::bitNumberFromBitBoard(positionFrom);
             ull diagonal2 = (bitNumber & 7) - (bitNumber >> 3);
             ull mask = (figures_dia2 >> (SHIFT_DIA1[diagonal2 + 7])&(AND_DIA1[diagonal2 + 7]));
-            bitboard bbTo = (BitBoardPrecalc::dia2[bitNumber][mask] & (kingPos));
+            bitboard bbTo = (BitBoardPrecalc::dia2[bitNumber][mask] & (figurePos));
 
             if (bbTo) return true;
 
@@ -268,7 +345,7 @@ namespace Engine {
             bitboard positionFrom = (bbFrom & -bbFrom);
             bitboard bbTo;
 
-            bbTo = KNIGHT_MOVES[BitBoard::bitNumberFromBitBoard(positionFrom)] & (kingPos);
+            bbTo = KNIGHT_MOVES[BitBoard::bitNumberFromBitBoard(positionFrom)] & (figurePos);
             if (bbTo) return true;
 
             bbFrom ^= positionFrom;
@@ -281,7 +358,7 @@ namespace Engine {
             int bitNumber = BitBoard::bitNumberFromBitBoard(positionFrom);
             ull horizontal = (bitNumber >> 3) << 3;
             ull mask = ((figures >> horizontal) & MASK);
-            bitboard bbTo = (BitBoardPrecalc::hor[bitNumber][mask] & (kingPos));
+            bitboard bbTo = (BitBoardPrecalc::hor[bitNumber][mask] & (figurePos));
 
             if (bbTo) return true;
 
@@ -295,7 +372,7 @@ namespace Engine {
             int bitNumber = BitBoard::bitNumberFromBitBoard(positionFrom);
             ull vertical = (bitNumber & 7) << 3;
             ull mask = ((figures_ver >> vertical) & MASK);
-            bitboard bbTo = (BitBoardPrecalc::ver[bitNumber][mask] & (kingPos));
+            bitboard bbTo = (BitBoardPrecalc::ver[bitNumber][mask] & (figurePos));
 
             if (bbTo) return true;
 
@@ -310,9 +387,9 @@ namespace Engine {
             bitboard positionFrom = (bbFrom & -bbFrom);
             bitboard bbTo;
             if (color == BLACK) {
-                bbTo = WHITE_PAWNS_CHOP[BitBoard::bitNumberFromBitBoard(positionFrom)] & (kingPos);
+                bbTo = WHITE_PAWNS_CHOP[BitBoard::bitNumberFromBitBoard(positionFrom)] & (figurePos);
             } else {
-                bbTo = BLACK_PAWNS_CHOP[BitBoard::bitNumberFromBitBoard(positionFrom)] & (kingPos);
+                bbTo = BLACK_PAWNS_CHOP[BitBoard::bitNumberFromBitBoard(positionFrom)] & (figurePos);
             }
 
             if (bbTo) return true;
@@ -325,7 +402,7 @@ namespace Engine {
 
         while (bbFrom) {
             bitboard positionFrom = (bbFrom & -bbFrom);
-            bitboard bbTo = KING_MOVES[BitBoard::bitNumberFromBitBoard(positionFrom)] & (kingPos);
+            bitboard bbTo = KING_MOVES[BitBoard::bitNumberFromBitBoard(positionFrom)] & (figurePos);
 
             if (bbTo) return true;
 
@@ -522,6 +599,23 @@ namespace Engine {
 
     inline void generateSilentMoves(list<move> &moves, int color) {
 
+        if (castleK && color == WHITE && board[60] == WHITE_KING && board[63] == WHITE_ROOK && board[61] == 0 && board[62] == 0 && !isCheck(WHITE, (1ull << 60)) && !isCheck(WHITE, (1ull << 61))) {
+            moves.push_back({100, 100, 100});
+        }
+
+        if (castleQ && color == WHITE && board[60] == WHITE_KING && board[56] == WHITE_ROOK && board[57] == 0 && board[59] == 0 && board[58] == 0 && !isCheck(WHITE, (1ull << 60)) && !isCheck(WHITE, (1ull << 59))) {
+            moves.push_back({200, 200, 200});
+        }
+
+        if (castlek && color == BLACK && board[4] == BLACK_KING && board[7] == BLACK_ROOK && board[5] == 0 && board[6] == 0 && !isCheck(BLACK, (1ull << 4)) && !isCheck(BLACK, (1ull << 5))) {
+            moves.push_back({300, 300, 300});
+        }
+
+
+        if (castleq && color == BLACK && board[4] == BLACK_KING && board[0] == BLACK_ROOK && board[1] == 0 && board[2] == 0 && board[3] == 0 && !isCheck(BLACK, (1ull << 4)) && !isCheck(BLACK, (1ull << 3))) {
+            moves.push_back({400, 400, 400});
+        }
+
         int figure = (color == WHITE) ? WHITE_KING : BLACK_KING;
         bitboard bbFrom = figuresArray[figure];
 
@@ -703,8 +797,13 @@ namespace Engine {
             int chopped = board[BitBoard::bitNumberFromBitBoard(mv.to)];
             bitboard oldEnPassant = enPassant;
             bitboard oldFacticalPawn = facticalPawn;
+            bitboard oldCastleK = castleK;
+            bitboard oldCastleQ = castleQ;
+            bitboard oldCastlek = castlek;
+            bitboard oldCastleq = castleq;
             doMove(mv, color);
-            if (!isCheck(color)) {
+            bitboard kingPos = (color == WHITE) ? figuresArray[WHITE_KING] : figuresArray[BLACK_KING];
+            if (!isCheck(color, kingPos)) {
 //                if (mv.enPassant) {
 //                    enPassentCnt++;
 //                    cout << enPassentCnt << " ";
@@ -721,6 +820,10 @@ namespace Engine {
             undoMove(mv, color, chopped, oldEnPassant, oldFacticalPawn);
             enPassant = oldEnPassant;
             facticalPawn = oldFacticalPawn;
+            castleK = oldCastleK;
+            castleQ = oldCastleQ;
+            castlek = oldCastlek;
+            castleq = oldCastleq;
 
 
         }
