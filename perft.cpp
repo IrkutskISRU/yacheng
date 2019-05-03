@@ -26,11 +26,11 @@ void testCase::print() {
 }
 
 
-const int numTests = 6383;
+const int numTests = 5;//6383;
 testCase tests[numTests];
 
 void testPerft() {
-    ifstream in("perft.txt");
+    ifstream in("new_perft.txt");
 
     for (int j = 0; j < numTests; j++) {
         string testName;
@@ -50,27 +50,63 @@ void testPerft() {
         tests[j] = {testName, position, res};
     }
 
-
-    for (int i = 0; i < 1; i++) {
+    int passed = 0;
+    int notPassed = 0;
+    int D = 3;
+    for (int i = 0; i < numTests; i++) {
 
         Engine::init(tests[i].position);
-//        if (!(tests[i].position.castleq)) continue;
-        tests[i].print();
-        Engine::alphabeta(tests[i].position.color, 7, -oo, oo);
 
-        cout << "Visited Positions: ";
+        Engine::alphabeta(tests[i].position.color, D, -oo, oo);
+        int j = 0;
+        bool OK = true;
+
         auto visitedPositions = Engine::getVisitedPositionsCnt();
         bool wasFirstNotNull = false;
         for (auto it = visitedPositions.rbegin(); it != visitedPositions.rend(); it++) {
             if (*it > 0) {
                 if (wasFirstNotNull) {
-                    cout << *it << " ";
+
+                    if (*it != tests[i].v[j]) {
+                        OK = false;
+                    }
+                    j++;
+
                 }
                 wasFirstNotNull = true;
             }
         }
-        cout << "\n";
+        if (OK) {
+            cout << "OK ";
+            passed ++;
+        } else {
+            notPassed ++;
+            cout << "\nWA\n";
+            tests[i].print();
+            cout <<"VISITED POSITIONS: ";
+            wasFirstNotNull = false;
+            for (auto it = ++visitedPositions.rbegin(); it != visitedPositions.rend(); it++) {
+                if (*it > 0) {
+                    if (wasFirstNotNull) {
+                    cout << *it << " ";
+                        j++;
+
+                    }
+                    wasFirstNotNull = true;
+                }
+            }
+            cout << "\n";
+
+        }
+        if (i % 10 == 9) {
+            cout.flush();
+        }
+        if (i % 100 == 99) {
+            cout << "\nPassed: " << passed << " Not Passed: " << notPassed << "\n";
+        }
     }
+
+    cout << "\nPassed: " << passed << " Not Passed: " << notPassed << "\n";
 
 
 }

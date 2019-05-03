@@ -47,12 +47,15 @@ namespace Engine {
         bitboard from;
         bitboard to;
         bool enPassant;
+        int newFigure;
 
-        move(int Figure, bitboard From, bitboard To, bool EnPassant = false) :
+        move(int Figure, bitboard From, bitboard To, bool EnPassant = false, int NewFigure = 0) :
                 figure(Figure),
                 from(From),
                 to(To),
-                enPassant(EnPassant) {
+                enPassant(EnPassant),
+                newFigure(NewFigure)
+        {
         }
     };
 
@@ -106,6 +109,7 @@ namespace Engine {
 
             return;
         }
+
 
         bitboard enPassantOrig = enPassant;
         bitboard facticalPawnOrig = facticalPawn;
@@ -173,6 +177,12 @@ namespace Engine {
         figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[bitFrom]);
         figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[bitTo]);
 
+        if (mv.newFigure != 0) {
+            board[bitTo] = mv.newFigure;
+            figuresArray[mv.newFigure] ^= mv.to;
+            figuresArray[mv.figure] ^= mv.to;
+        }
+
 
     }
 
@@ -205,11 +215,18 @@ namespace Engine {
 
             return;
         }
+
+
         bitboard &colorFigures = (color == WHITE) ? wFigures : bFigures;
         bitboard &enemyFigures = (color == WHITE) ? bFigures : wFigures;
         int bitFrom = BitBoard::bitNumberFromBitBoard(mv.from);
         int bitTo = BitBoard::bitNumberFromBitBoard(mv.to);
 
+        if (mv.newFigure != 0) {
+            board[bitTo] = mv.figure;
+            figuresArray[mv.newFigure] ^= mv.to;
+            figuresArray[mv.figure] ^= mv.to;
+        }
 
         board[bitFrom] = board[bitTo];
         board[bitTo] = chopped;
@@ -428,7 +445,19 @@ namespace Engine {
 
             while (bbTo) {
                 bitboard positionTo = (bbTo & -bbTo);
-                moves.push_back({figure, positionFrom, positionTo});
+                if (color == WHITE && positionTo < (1ull << 8)) {
+                    moves.push_back({figure, positionFrom, positionTo, 0, WHITE_QUEEN});
+                    moves.push_back({figure, positionFrom, positionTo, 0, WHITE_ROOK});
+                    moves.push_back({figure, positionFrom, positionTo, 0, WHITE_KNIGHT});
+                    moves.push_back({figure, positionFrom, positionTo, 0, WHITE_BISHOP});
+                } else if (color == BLACK && positionTo >= (1ull << 56)) {
+                    moves.push_back({figure, positionFrom, positionTo, 0, BLACK_QUEEN});
+                    moves.push_back({figure, positionFrom, positionTo, 0, BLACK_ROOK});
+                    moves.push_back({figure, positionFrom, positionTo, 0, BLACK_KNIGHT});
+                    moves.push_back({figure, positionFrom, positionTo, 0, BLACK_BISHOP});
+                } else {
+                    moves.push_back({figure, positionFrom, positionTo});
+                }
 
                 bbTo ^= positionTo;
             }
@@ -627,6 +656,7 @@ namespace Engine {
                 bitboard positionTo = (bbTo & -bbTo);
                 moves.push_back({figure, positionFrom, positionTo});
 
+
                 bbTo ^= positionTo;
             }
 
@@ -660,7 +690,19 @@ namespace Engine {
 
             while (bbTo) {
                 bitboard positionTo = (bbTo & -bbTo);
-                moves.push_back({figure, positionFrom, positionTo});
+                if (color == WHITE && positionTo < (1ull << 8)) {
+                    moves.push_back({figure, positionFrom, positionTo, 0, WHITE_QUEEN});
+                    moves.push_back({figure, positionFrom, positionTo, 0, WHITE_ROOK});
+                    moves.push_back({figure, positionFrom, positionTo, 0, WHITE_KNIGHT});
+                    moves.push_back({figure, positionFrom, positionTo, 0, WHITE_BISHOP});
+                } else if (color == BLACK && positionTo >= (1ull << 56)) {
+                    moves.push_back({figure, positionFrom, positionTo, 0, BLACK_QUEEN});
+                    moves.push_back({figure, positionFrom, positionTo, 0, BLACK_ROOK});
+                    moves.push_back({figure, positionFrom, positionTo, 0, BLACK_KNIGHT});
+                    moves.push_back({figure, positionFrom, positionTo, 0, BLACK_BISHOP});
+                } else {
+                    moves.push_back({figure, positionFrom, positionTo});
+                }
                 if (numberRow == 1 && color == BLACK || numberRow == 6 && color == WHITE) {
                     bitboard positionTo2 = (color == WHITE) ? WHITE_PAWNS_LONG_MOVES[bitNumber] & (~figures) : BLACK_PAWNS_LONG_MOVES[bitNumber] & (~figures);
                     if (positionTo2) {
