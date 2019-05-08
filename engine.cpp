@@ -1,4 +1,4 @@
-//
+    //
 // Created by artyom-m on 3/21/19.
 //
 #define INIT(bitboard) bitboard = position.bitboard;
@@ -33,7 +33,7 @@ namespace Engine {
     const ull MASK = 255;
     bitboard wFigures, bFigures, figures, figures_ver, figures_dia1, figures_dia2;
     bitboard figuresArray[1000];
-    int board[64];
+    vector <int> board;
 
     vector<ll> visitedPositionsCnt = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     int capturesCnt = 0;
@@ -42,22 +42,6 @@ namespace Engine {
     bitboard enPassant;
     bitboard facticalPawn;
 
-    struct move {
-        int figure;
-        bitboard from;
-        bitboard to;
-        bool enPassant;
-        int newFigure;
-
-        move(int Figure, bitboard From, bitboard To, bool EnPassant = false, int NewFigure = 0) :
-                figure(Figure),
-                from(From),
-                to(To),
-                enPassant(EnPassant),
-                newFigure(NewFigure)
-        {
-        }
-    };
 
     inline void doMove(move mv, int color) {
 
@@ -275,10 +259,15 @@ namespace Engine {
         }
     }
 
+    vector<int>get_board() {
+        return board;
+    }
+
     void init(EPD &position) {
 
+        board.clear();
         for (int i = 0; i < 64; i++) {
-            board[i] = 0;
+            board.push_back(0);
         }
 
         INIT_FIGURE(wKings, WHITE_KING);
@@ -429,7 +418,7 @@ namespace Engine {
         return false;
     }
 
-    void generateAgressiveMoves(list<move>& moves, int color) {
+    void generateAgressiveMoves(vector<move>& moves, int color) {
 
         int figure = (color == WHITE) ? WHITE_PAWN : BLACK_PAWN;
         bitboard bbFrom = figuresArray[figure];
@@ -626,7 +615,7 @@ namespace Engine {
 
     }
 
-    inline void generateSilentMoves(list<move> &moves, int color) {
+    inline void generateSilentMoves(vector<move> &moves, int color) {
 
         if (castleK && color == WHITE && board[60] == WHITE_KING && board[63] == WHITE_ROOK && board[61] == 0 && board[62] == 0 && !isCheck(WHITE, (1ull << 60)) && !isCheck(WHITE, (1ull << 61))) {
             moves.push_back({100, 100, 100});
@@ -830,7 +819,8 @@ namespace Engine {
         if (depth == 0) {
             return;
         }
-        list<move> moves;
+        vector<move> moves;
+        vector<bool> notCheck;
         generateAgressiveMoves(moves, color);
         generateSilentMoves(moves, color);
 
@@ -839,12 +829,13 @@ namespace Engine {
             int chopped = board[BitBoard::bitNumberFromBitBoard(mv.to)];
             bitboard oldEnPassant = enPassant;
             bitboard oldFacticalPawn = facticalPawn;
-            bitboard oldCastleK = castleK;
-            bitboard oldCastleQ = castleQ;
-            bitboard oldCastlek = castlek;
-            bitboard oldCastleq = castleq;
+            bool oldCastleK = castleK;
+            bool oldCastleQ = castleQ;
+            bool oldCastlek = castlek;
+            bool oldCastleq = castleq;
             doMove(mv, color);
             bitboard kingPos = (color == WHITE) ? figuresArray[WHITE_KING] : figuresArray[BLACK_KING];
+            string bestMove = "";
             if (!isCheck(color, kingPos)) {
 //                if (mv.enPassant) {
 //                    enPassentCnt++;
@@ -854,7 +845,12 @@ namespace Engine {
 //                if (depth == 1 && oldEnPassant)
 
 //                cout << mv.figure << " " << toHuman[BitBoard::bitNumberFromBitBoard(mv.from)] << " " << toHuman[BitBoard::bitNumberFromBitBoard(mv.to)] << "!\n";
+//                cout << "bestmove " << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].from)] << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].to)] << "\n";
+                notCheck.push_back(true);
                 alphabeta(color ^ WHITE_BLACK, depth - 1, -beta, -alpha);
+
+            } else {
+                notCheck.push_back(false);
             }
             if (mv.enPassant) {
                 chopped = (color == WHITE) ? BLACK_PAWN : WHITE_PAWN;
@@ -867,14 +863,107 @@ namespace Engine {
             castlek = oldCastlek;
             castleq = oldCastleq;
 
-
         }
+
+
+        if (depth == 1) {
+            int randMove = 0;
+            do {
+                randMove = rand() % moves.size();
+            } while (!notCheck[randMove]);
+            if (moves[randMove].figure == 100) {
+                cout << "bestmove e1g1\n";
+            } else
+            if (moves[randMove].figure == 200) {
+                cout << "bestmove e1c1\n";
+            } else
+            if (moves[randMove].figure == 300) {
+                cout << "bestmove e8g8\n";
+            } else
+            if (moves[randMove].figure == 400) {
+                cout << "bestmove e8c8\n";
+            } else {
+                if (!moves[randMove].newFigure) {
+                    cout << "bestmove " << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].from)]
+                         << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].to)] << "\n";
+                } else {
+                    cout << "bestmove " << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].from)]
+                         << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].to)];
+                    if (moves[randMove].newFigure & QUEEN) {
+                        cout << "q\n";
+                    }
+                    if (moves[randMove].newFigure & BISHOP) {
+                        cout << "b\n";
+                    }
+                    if (moves[randMove].newFigure & ROOK) {
+                        cout << "b\n";
+                    }
+                    if (moves[randMove].newFigure & KNIGHT) {
+                        cout << "n\n";
+                    }
+                }
+            }
+        }
+
 
     }
 
 
     vector<ll> getVisitedPositionsCnt() {
        return visitedPositionsCnt;
+    }
+
+    void print_board() {
+        string s = "abcdefgh";
+        cout << "  ";
+        for (int i = 0; i < 8; i ++) {
+            cout << s[i] << " ";
+        }
+        cout << "\n";
+        for (int i = 0; i < 64; i++) {
+
+            if (i % 8 == 0) {
+                cout << 8 - (i/8);
+            }
+
+            cout << "|";
+            if (board[i] == WHITE_KING) {
+                cout << "♔";
+            } else if (board[i] == WHITE_QUEEN) {
+                cout << "♕";
+            } else if (board[i] == WHITE_ROOK) {
+                cout << "♖";
+            } else if (board[i] == WHITE_BISHOP) {
+                cout << "♗";
+            } else if (board[i] == WHITE_KNIGHT) {
+                cout << "♘";
+            } else if (board[i] == WHITE_PAWN) {
+                cout << "♙";
+            } else if (board[i] == BLACK_KING) {
+                cout << "♚";
+            } else if (board[i] == BLACK_QUEEN) {
+                cout << "♛";
+            } else if (board[i] == BLACK_ROOK) {
+                cout << "♜";
+            } else if (board[i] == BLACK_BISHOP) {
+                cout << "♝";
+            } else if (board[i] == BLACK_KNIGHT) {
+                cout << "♞";
+            } else if (board[i] == BLACK_PAWN) {
+                cout << "♟";
+            } else {
+                cout << " ";
+            }
+
+            if (i % 8 == 7) {
+                cout << "|" << 8 - (i/8) << "\n";
+            }
+        }
+        cout << " ";
+        for (int i = 0; i < 8; i ++) {
+            cout << s[i] << " ";
+        }
+        cout << "\n";
     }
 
 }

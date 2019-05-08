@@ -15,10 +15,10 @@ const int WHITE_BLACK = WHITE + BLACK;
 
 const int PAWN = 1;
 const int KNIGHT = 2;
-const int BISHOP = 3;
-const int ROOK = 4;
-const int QUEEN = 5;
-const int KING = 6;
+const int BISHOP = 4;
+const int ROOK = 8;
+const int QUEEN = 16;
+const int KING = 32;
 
 const int WHITE_PAWN = WHITE | PAWN;
 const int WHITE_KNIGHT = WHITE | KNIGHT;
