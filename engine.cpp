@@ -2,7 +2,8 @@
 // Created by artyom-m on 3/21/19.
 //
 #define INIT(bitboard) bitboard = position.bitboard;
-#define INIT_FIGURE(bitboard, figureIndex) figuresArray[figureIndex] = position.bitboard;\
+#define INIT_FIGURE(bitboard, figureIndex) figuresArray[figureIndex] = position.bitboard; \
+mark += figureIndex ## _WEIGHT;              \
 for (int i = 0; i < 64; i++) {               \
     if ((1ull << i) & position.bitboard) {   \
         board[i] = figureIndex;              \
@@ -30,6 +31,7 @@ struct figure {
 };
 
 namespace Engine {
+    int mark;
     const ull MASK = 255;
     bitboard wFigures, bFigures, figures, figures_ver, figures_dia1, figures_dia2;
     bitboard figuresArray[1000];
@@ -259,12 +261,16 @@ namespace Engine {
         }
     }
 
-    vector<int>get_board() {
+    vector<int>getBoard() {
         return board;
     }
 
-    void init(EPD &position) {
+    int getMark() {
+        return mark;
+    }
 
+    void init(EPD &position) {
+        mark = 0;
         board.clear();
         for (int i = 0; i < 64; i++) {
             board.push_back(0);
@@ -865,41 +871,39 @@ namespace Engine {
 
         }
 
-
-        if (depth == 1) {
-            int randMove = 0;
-            do {
-                randMove = rand() % moves.size();
-            } while (!notCheck[randMove]);
-            if (moves[randMove].figure == 100) {
-                cout << "bestmove e1g1\n";
-            } else
-            if (moves[randMove].figure == 200) {
-                cout << "bestmove e1c1\n";
-            } else
-            if (moves[randMove].figure == 300) {
-                cout << "bestmove e8g8\n";
-            } else
-            if (moves[randMove].figure == 400) {
-                cout << "bestmove e8c8\n";
-            } else {
-                if (!moves[randMove].newFigure) {
-                    cout << "bestmove " << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].from)]
-                         << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].to)] << "\n";
+        if (mode == engineMode::Game) {
+            if (depth == 1) {
+                int randMove = 0;
+                do {
+                    randMove = rand() % moves.size();
+                } while (!notCheck[randMove]);
+                if (moves[randMove].figure == 100) {
+                    cout << "bestmove e1g1\n";
+                } else if (moves[randMove].figure == 200) {
+                    cout << "bestmove e1c1\n";
+                } else if (moves[randMove].figure == 300) {
+                    cout << "bestmove e8g8\n";
+                } else if (moves[randMove].figure == 400) {
+                    cout << "bestmove e8c8\n";
                 } else {
-                    cout << "bestmove " << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].from)]
-                         << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].to)];
-                    if (moves[randMove].newFigure & QUEEN) {
-                        cout << "q\n";
-                    }
-                    if (moves[randMove].newFigure & BISHOP) {
-                        cout << "b\n";
-                    }
-                    if (moves[randMove].newFigure & ROOK) {
-                        cout << "b\n";
-                    }
-                    if (moves[randMove].newFigure & KNIGHT) {
-                        cout << "n\n";
+                    if (!moves[randMove].newFigure) {
+                        cout << "bestmove " << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].from)]
+                             << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].to)] << "\n";
+                    } else {
+                        cout << "bestmove " << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].from)]
+                             << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].to)];
+                        if (moves[randMove].newFigure & QUEEN) {
+                            cout << "q\n";
+                        }
+                        if (moves[randMove].newFigure & BISHOP) {
+                            cout << "b\n";
+                        }
+                        if (moves[randMove].newFigure & ROOK) {
+                            cout << "b\n";
+                        }
+                        if (moves[randMove].newFigure & KNIGHT) {
+                            cout << "n\n";
+                        }
                     }
                 }
             }
@@ -913,7 +917,7 @@ namespace Engine {
        return visitedPositionsCnt;
     }
 
-    void print_board() {
+    void printBoard() {
         string s = "abcdefgh";
         cout << "  ";
         for (int i = 0; i < 8; i ++) {

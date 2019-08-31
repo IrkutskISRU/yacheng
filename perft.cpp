@@ -26,11 +26,12 @@ void testCase::print() {
 }
 
 
-const int numTests = 5;//6383;
+const int numTests = 5;
+const auto& perftFileName = "new_perft.txt";
 testCase tests[numTests];
 
 void testPerft() {
-    ifstream in("new_perft.txt");
+    ifstream in(perftFileName);
 
     for (int j = 0; j < numTests; j++) {
         string testName;
@@ -52,7 +53,7 @@ void testPerft() {
 
     int passed = 0;
     int notPassed = 0;
-    int D = 3;
+    int D = 4;
     for (int i = 0; i < numTests; i++) {
 
         Engine::init(tests[i].position);
@@ -66,6 +67,7 @@ void testPerft() {
         for (auto it = visitedPositions.rbegin(); it != visitedPositions.rend(); it++) {
             if (*it > 0) {
                 if (wasFirstNotNull) {
+                    cout << i << " " << *it << " ";
 
                     if (*it != tests[i].v[j]) {
                         OK = false;

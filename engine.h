@@ -8,6 +8,7 @@
 #include "types.h"
 #include "board.h"
 #include "constants.h"
+#include "config.h"
 
 namespace Engine {
 
@@ -33,6 +34,7 @@ namespace Engine {
     inline void doMove(move mv, int color);
     inline void undoMove(move mv, int color, int chopped, bitboard oldEnPassant, bitboard oldFacticalPawn);
     vector<ll> getVisitedPositionsCnt();
-    vector<int>get_board();
-    void print_board();
+    vector<int>getBoard();
+    void printBoard();
+    int getMark();
 }

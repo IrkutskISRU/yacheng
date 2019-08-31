@@ -7,16 +7,20 @@
 #include "perft.h"
 #include "bitboard_precalc.h"
 #include "precalc.h"
+#include "config.h"
 
 int main() {
     BitBoard::initDecode();
     Constants::init();
 
-//    EPD position("1n4kr/2B4p/2nb2b1/ppp5/P1PpP3/3P4/5K2/1N1R4 b - c3");
-//    Engine::init(position);
-//    position.print();
+    /*EPD position("1n4kr/2B4p/2nb2b1/ppp5/P1PpP3/3P4/5K2/1N1R4 b - c3");
+    Engine::init(position);
+    position.print();*/
 
-//    testPerft();
+    if (mode == engineMode::Perft) {
+        testPerft();
+        return 0;
+    }
 
     srand(time(0));
 
@@ -47,8 +51,8 @@ int main() {
 
                     bitboard from = (1ull << (8 * ('8' - s[1]) + (s[0] - 'a')));
                     bitboard to = (1ull << (8 * ('8' - s[3]) + (s[2] - 'a')));
-                    int figure = Engine::get_board()[(8 * ('8' - s[1]) + (s[0] - 'a'))];
-                    int enemyFigure = Engine::get_board()[(8 * ('8' - s[3]) + (s[2] - 'a'))];
+                    int figure = Engine::getBoard()[(8 * ('8' - s[1]) + (s[0] - 'a'))];
+                    int enemyFigure = Engine::getBoard()[(8 * ('8' - s[3]) + (s[2] - 'a'))];
                     Engine::move mv{figure, from, to};
                     if (s == "e1g1" && figure == WHITE_KING) {
                         mv.figure = 100;
@@ -90,6 +94,7 @@ int main() {
             } while (s != "go");
 
             if (s == "go") {
+                cout << "mark: " << Engine::getMark() << "\n";
 //                Engine::print_board();
                 Engine::alphabeta(color ^ WHITE_BLACK, 1, -oo, oo);
 
