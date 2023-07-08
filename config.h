@@ -9,7 +9,8 @@
 
 enum engineMode {
     Perft = 1,
-    Game
+    Game = 2,
+    Launch = 3
 };
 
-const engineMode mode = engineMode::Perft;
+const engineMode mode = engineMode::Launch;

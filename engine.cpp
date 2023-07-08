@@ -3,10 +3,10 @@
 //
 #define INIT(bitboard) bitboard = position.bitboard;
 #define INIT_FIGURE(bitboard, figureIndex) figuresArray[figureIndex] = position.bitboard; \
-mark += figureIndex ## _WEIGHT;              \
 for (int i = 0; i < 64; i++) {               \
     if ((1ull << i) & position.bitboard) {   \
         board[i] = figureIndex;              \
+	mark += figureIndex ## _WEIGHT;      \
     }                                        \
 }                                            \
 
