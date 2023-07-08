@@ -45,7 +45,7 @@ namespace Engine {
     bitboard facticalPawn;
 
 
-    inline void doMove(move mv, int color) {
+    void doMove(move mv, int color) {
 
         if (mv.from == (1ull << 63)) {
             castleK = false;
@@ -172,7 +172,7 @@ namespace Engine {
 
     }
 
-    inline void undoMove(move mv, int color, int chopped, bitboard oldEnPassant, bitboard oldFacticalPawn) {
+    void undoMove(move mv, int color, int chopped, bitboard oldEnPassant, bitboard oldFacticalPawn) {
 
         if (mv.figure == 100) {
             undoMove({WHITE_KING, (1ull) << 60, (1ull) << 62}, WHITE, 0, 0, 0);

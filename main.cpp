@@ -3,6 +3,7 @@
 
 #include "constants.h"
 #include "engine.h"
+#include "bitboard.h"
 #include "board.h"
 #include "perft.h"
 #include "bitboard_precalc.h"

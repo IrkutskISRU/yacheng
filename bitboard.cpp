@@ -7,7 +7,7 @@
 
 namespace BitBoard {
 
-    bitboard print(bitboard bb) {
+    void print(bitboard bb) {
         for (ull i = 0; i < 64; i++) {
             if (bb & (1ull << i)) {
                 std::cout << "*";

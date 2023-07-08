@@ -26,8 +26,8 @@ void testCase::print() {
 }
 
 
-const int numTests = 5;
-const auto& perftFileName = "new_perft.txt";
+const int numTests = 6838;
+const auto& perftFileName = "perft/perft.txt";
 testCase tests[numTests];
 
 void testPerft() {
@@ -67,7 +67,7 @@ void testPerft() {
         for (auto it = visitedPositions.rbegin(); it != visitedPositions.rend(); it++) {
             if (*it > 0) {
                 if (wasFirstNotNull) {
-                    cout << i << " " << *it << " ";
+//                    cout << i << " " << *it << " ";
 
                     if (*it != tests[i].v[j]) {
                         OK = false;

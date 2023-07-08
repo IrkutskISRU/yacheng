@@ -10,7 +10,7 @@ namespace BitBoard {
     const ull MASK = 65535;
     static int decode[50000];
 
-    bitboard print(bitboard bb);
+    void print(bitboard bb);
     int bitNumberFromBitBoard(bitboard bb);
     void initDecode();
 
