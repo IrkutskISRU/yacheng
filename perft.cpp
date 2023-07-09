@@ -57,8 +57,8 @@ void testPerft() {
     for (int i = 0; i < numTests; i++) {
 
         Engine::init(tests[i].position);
-
-        Engine::alphabeta(tests[i].position.color, 0, D, -oo, oo);
+		vector<Engine::move> moves;
+        Engine::alphabeta(tests[i].position.color, 0, D, -oo, oo, moves);
         int j = 0;
         bool OK = true;
 

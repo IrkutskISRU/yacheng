@@ -34,6 +34,7 @@ struct figure {
 namespace Engine {
     int mark;
     move bestMove{100, 100, 100};
+    vector<move> bestString;
     int bestScore = 0;
     const ull MASK = 255;
     bitboard wFigures, bFigures, figures, figures_ver, figures_dia1, figures_dia2;
@@ -113,6 +114,16 @@ namespace Engine {
         int bitFrom = BitBoard::bitNumberFromBitBoard(mv.from);
         int bitTo = BitBoard::bitNumberFromBitBoard(mv.to);
 
+		if (color == WHITE && mv.figure == WHITE_PAWN) {
+			mark += WHITE_PAWN_WEIGHTS[bitTo];
+			mark -= WHITE_PAWN_WEIGHTS[bitFrom];
+		}
+
+		if (color == BLACK && mv.figure == BLACK_PAWN) {
+			mark += BLACK_PAWN_WEIGHTS[bitTo];
+			mark -= BLACK_PAWN_WEIGHTS[bitFrom];
+		}
+
         if ((mv.figure == WHITE_PAWN || mv.figure == BLACK_PAWN) && (bitFrom == bitTo + 16 || bitTo == bitFrom + 16)) {
             if (bitTo > bitFrom) {
                 enPassant = 1ull << (bitFrom + 8);
@@ -153,6 +164,12 @@ namespace Engine {
             figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[bitTo]);
 
 			mark -= weightByFigure[chopped];
+			if (chopped == WHITE_PAWN) {
+				mark -= WHITE_PAWN_WEIGHTS[bitTo];
+			}
+			if (chopped == BLACK_PAWN) {
+				mark -= BLACK_PAWN_WEIGHTS[bitTo];
+			}
         }
 
         colorFigures ^= mv.from;
@@ -219,6 +236,16 @@ namespace Engine {
         int bitFrom = BitBoard::bitNumberFromBitBoard(mv.from);
         int bitTo = BitBoard::bitNumberFromBitBoard(mv.to);
 
+		if (mv.figure == WHITE_PAWN) {
+			mark -= WHITE_PAWN_WEIGHTS[bitTo];
+			mark += WHITE_PAWN_WEIGHTS[bitFrom];
+		}
+
+		if (mv.figure == BLACK_PAWN) {
+			mark -= BLACK_PAWN_WEIGHTS[bitTo];
+			mark += BLACK_PAWN_WEIGHTS[bitFrom];
+		}
+
         if (mv.newFigure != 0) {
             board[bitTo] = mv.figure;
             figuresArray[mv.newFigure] ^= mv.to;
@@ -250,6 +277,12 @@ namespace Engine {
             figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[bitTo]);
 
 			mark += weightByFigure[chopped];
+			if (chopped == WHITE_PAWN) {
+				mark += WHITE_PAWN_WEIGHTS[bitTo];
+			}
+			if (chopped == BLACK_PAWN) {
+				mark += BLACK_PAWN_WEIGHTS[bitTo];
+			}
         }
 
         figures_ver ^= (1ull << BitBoardPrecalc::to_ver[bitFrom]);
@@ -847,11 +880,10 @@ namespace Engine {
 
     }
 
-    int alphabeta(int color, int ply, int depth, int alpha, int beta) {
+    int alphabeta(int color, int ply, int depth, int alpha, int beta, vector<move>& stringFromStart) {
         visitedPositionsCnt[depth] ++;
-
         if (depth == 0) {
-            return getMark(color) + rand() % 10;
+            return getMark(color) + rand() % 3;
         }
         vector<move> moves;
         vector<bool> notCheck;
@@ -859,8 +891,10 @@ namespace Engine {
         generateSilentMoves(moves, color);
 
 		int good_moves = 0;
+		vector<move> tmpBestString;
 
         for (auto mv: moves) {
+			vector<move> tmpString{mv};
 
 			if (alpha >= beta) {
 				return alpha;
@@ -879,12 +913,20 @@ namespace Engine {
             if (!isCheck(color, kingPos)) {
 				good_moves ++;
                 notCheck.push_back(true);
-                int subMark = -alphabeta(color ^ WHITE_BLACK, ply + 1, depth - 1, -beta, -alpha);
+                int subMark = -alphabeta(color ^ WHITE_BLACK, ply + 1, depth - 1, -beta, -alpha, tmpString);
 				if (subMark > alpha) {
+					tmpBestString = tmpString;
 					alpha = subMark;
 					if (ply == 0) {
 						bestMove = mv;
 						bestScore = subMark;
+						bestString.clear();
+						for (auto stringMv: stringFromStart) {
+							bestString.emplace_back(stringMv);
+						}
+						for (auto stringMv: tmpString) {
+							bestString.emplace_back(stringMv);
+						}
 					}
 				}
 /*		if (ply == 0) {
@@ -907,6 +949,9 @@ namespace Engine {
             castleq = oldCastleq;
 
         }
+		for (auto& stringMv : tmpBestString) {
+			stringFromStart.emplace_back(stringMv);
+		}
 
 		if (good_moves == 0) {
 				bitboard kingPos = (color == WHITE) ? figuresArray[WHITE_KING] : figuresArray[BLACK_KING];
@@ -919,7 +964,12 @@ namespace Engine {
 
         if (mode == engineMode::Game || mode == engineMode::Launch) {
             if (ply == 0) {
-		cout << "info depth 123 score cp " << bestScore / 10 << " time 0 nodes 0 pv e2e4\n";
+		cout << "info depth 123 score cp " << bestScore / 10 << " time 0 nodes 0 pv ";
+		for (auto & moveString: bestString) {
+                        cout << toHuman[BitBoard::bitNumberFromBitBoard(moveString.from)]
+                             << toHuman[BitBoard::bitNumberFromBitBoard(moveString.to)] << " ";
+		}
+		cout << "\n";
                 if (bestMove.figure == 100) {
                     cout << "bestmove e1g1\n";
                 } else if (bestMove.figure == 200) {

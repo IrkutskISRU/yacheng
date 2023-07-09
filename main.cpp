@@ -18,7 +18,8 @@ int main() {
 	    EPD position("rnbqkbnr/p1ppppPp/8/8/8/8/PPpP1PPP/RNBQKBNR w KQkq - 0 1");
 	    Engine::init(position);
 	    position.print();
-	    Engine::alphabeta(WHITE, 0, 6, -oo, oo);
+	    vector<Engine::move> moves;
+	    Engine::alphabeta(WHITE, 0, 6, -oo, oo, moves);
 	    cout << "\n---\n";
 	    position.print();
 	    cout << Engine::getMark(WHITE);
@@ -101,7 +102,8 @@ int main() {
 		    if (s == "go") {
 			cout << "mark: " << Engine::getMark(color) << "\n";
 	//                Engine::print_board();
-			Engine::alphabeta(color ^ WHITE_BLACK, 0, 6, -oo, oo);
+			vector<Engine::move> moves;
+			Engine::alphabeta(color ^ WHITE_BLACK, 0, 6, -oo, oo, moves);
 
 		    }
 
