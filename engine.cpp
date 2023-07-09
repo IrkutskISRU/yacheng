@@ -34,6 +34,7 @@ struct figure {
 namespace Engine {
     int mark;
     move bestMove{100, 100, 100};
+    int bestScore = 0;
     const ull MASK = 255;
     bitboard wFigures, bFigures, figures, figures_ver, figures_dia1, figures_dia2;
     bitboard figuresArray[1000];
@@ -883,6 +884,7 @@ namespace Engine {
 					alpha = subMark;
 					if (ply == 0) {
 						bestMove = mv;
+						bestScore = subMark;
 					}
 				}
 /*		if (ply == 0) {
@@ -917,6 +919,7 @@ namespace Engine {
 
         if (mode == engineMode::Game || mode == engineMode::Launch) {
             if (ply == 0) {
+		cout << "info depth 123 score cp " << bestScore / 10 << " time 0 nodes 0 pv e2e4\n";
                 if (bestMove.figure == 100) {
                     cout << "bestmove e1g1\n";
                 } else if (bestMove.figure == 200) {
