@@ -15,7 +15,7 @@ int main() {
     Constants::init();
 
     if (mode == engineMode::Launch) {
-	    EPD position("rnb2bnr/pppppppp/3k3q/8/8/6N1/PPPPPPPP/RNBQKB1R w KQha - 0 1");
+	    EPD position("rnbqkbnr/p1ppppPp/8/8/8/8/PPpP1PPP/RNBQKBNR w KQkq - 0 1");
 	    Engine::init(position);
 	    position.print();
 	    Engine::alphabeta(WHITE, 0, 6, -oo, oo);

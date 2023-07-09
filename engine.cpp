@@ -5,7 +5,8 @@
 for (int i = 0; i < 64; i++) {               \
     if ((1ull << i) & position.bitboard) {   \
         board[i] = figureIndex;              \
-	mark += figureIndex ## _WEIGHT;      \
+		mark += figureIndex ## _WEIGHT;      \
+		weightByFigure[figureIndex] = figureIndex ## _WEIGHT; \
     }                                        \
 }                                            \
 
@@ -23,6 +24,7 @@ string toHuman[64] = {"a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
                       "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
                       "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
                       "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",};
+int weightByFigure[600];
 
 struct figure {
     int type;
@@ -149,40 +151,7 @@ namespace Engine {
             figures_dia1 ^= (1ull << BitBoardPrecalc::to_dia1[bitTo]);
             figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[bitTo]);
 
-	    if (color == WHITE) {
-		if (chopped & PAWN) {
-		    mark += 1000;
-		}
-		if (chopped & BISHOP) {
-		    mark += 3000;
-		}
-		if (chopped & KNIGHT) {
-		    mark += 3000;
-		}
-		if (chopped & ROOK) {
-		    mark += 5000;
-		}
-		if (chopped & QUEEN) {
-		    mark += 9000;
-		}
-	    }
-	    if (color == BLACK) {
-		if (chopped & PAWN) {
-		    mark -= 1000;
-		}
-		if (chopped & BISHOP) {
-		    mark -= 3000;
-		}
-		if (chopped & KNIGHT) {
-		    mark -= 3000;
-		}
-		if (chopped & ROOK) {
-		    mark -= 5000;
-		}
-		if (chopped & QUEEN) {
-		    mark -= 9000;
-		}
-	    }
+			mark -= weightByFigure[chopped];
         }
 
         colorFigures ^= mv.from;
@@ -200,33 +169,12 @@ namespace Engine {
 
         if (mv.newFigure != 0) {
             board[bitTo] = mv.newFigure;
-	    if (color == WHITE) {
-		    if (mv.newFigure & BISHOP) {
-			    mark += 2000;
-		    }
-		    if (mv.newFigure & KNIGHT) {
-			    mark += 2000;
-		    }
-		    if (mv.newFigure & ROOK) {
-			    mark += 4000;
-		    }
-		    if (mv.newFigure & QUEEN) {
-			    mark += 8000;
-		    }
-	    } else {
-		    if (mv.newFigure & BISHOP) {
-			    mark -= 2000;
-		    }
-		    if (mv.newFigure & KNIGHT) {
-			    mark -= 2000;
-		    }
-		    if (mv.newFigure & ROOK) {
-			    mark -= 4000;
-		    }
-		    if (mv.newFigure & QUEEN) {
-			    mark -= 8000;
-		    }
-	    }
+			mark += weightByFigure[mv.newFigure];
+			if (color == WHITE) {
+				mark -= weightByFigure[WHITE_PAWN];
+			} else {
+				mark -= weightByFigure[BLACK_PAWN];
+			}
             figuresArray[mv.newFigure] ^= mv.to;
             figuresArray[mv.figure] ^= mv.to;
         }
@@ -274,33 +222,12 @@ namespace Engine {
             board[bitTo] = mv.figure;
             figuresArray[mv.newFigure] ^= mv.to;
             figuresArray[mv.figure] ^= mv.to;
-	    if (color == BLACK) {
-		    if (mv.newFigure & BISHOP) {
-			    mark += 2000;
-		    }
-		    if (mv.newFigure & KNIGHT) {
-			    mark += 2000;
-		    }
-		    if (mv.newFigure & ROOK) {
-			    mark += 4000;
-		    }
-		    if (mv.newFigure & QUEEN) {
-			    mark += 8000;
-		    }
-	    } else {
-		    if (mv.newFigure & BISHOP) {
-			    mark -= 2000;
-		    }
-		    if (mv.newFigure & KNIGHT) {
-			    mark -= 2000;
-		    }
-		    if (mv.newFigure & ROOK) {
-			    mark -= 4000;
-		    }
-		    if (mv.newFigure & QUEEN) {
-			    mark -= 8000;
-		    }
-	    }
+			mark -= weightByFigure[mv.newFigure];
+			if (color == WHITE) {
+				mark += weightByFigure[WHITE_PAWN];
+			} else {
+				mark += weightByFigure[BLACK_PAWN];
+			}
         }
 
         board[bitFrom] = board[bitTo];
@@ -320,40 +247,8 @@ namespace Engine {
             figures_ver ^= (1ull << BitBoardPrecalc::to_ver[bitTo]);
             figures_dia1 ^= (1ull << BitBoardPrecalc::to_dia1[bitTo]);
             figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[bitTo]);
-	    if (chopped & BLACK) {
-		if (chopped & PAWN) {
-		    mark -= 1000;
-		}
-		if (chopped & BISHOP) {
-		    mark -= 3000;
-		}
-		if (chopped & KNIGHT) {
-		    mark -= 3000;
-		}
-		if (chopped & ROOK) {
-		    mark -= 5000;
-		}
-		if (chopped & QUEEN) {
-		    mark -= 9000;
-		}
-	    }
-	    if (chopped & WHITE) {
-		if (chopped & PAWN) {
-		    mark += 1000;
-		}
-		if (chopped & BISHOP) {
-		    mark += 3000;
-		}
-		if (chopped & KNIGHT) {
-		    mark += 3000;
-		}
-		if (chopped & ROOK) {
-		    mark += 5000;
-		}
-		if (chopped & QUEEN) {
-		    mark += 9000;
-		}
-	    }
+
+			mark += weightByFigure[chopped];
         }
 
         figures_ver ^= (1ull << BitBoardPrecalc::to_ver[bitFrom]);
@@ -403,6 +298,10 @@ namespace Engine {
             board.push_back(0);
         }
 
+		for (int i = 0; i < 600; i ++) {
+			weightByFigure[i] = 0;
+		}
+
         INIT_FIGURE(wKings, WHITE_KING);
         INIT_FIGURE(wQueens, WHITE_QUEEN);
         INIT_FIGURE(wRooks, WHITE_ROOK);
@@ -415,6 +314,7 @@ namespace Engine {
         INIT_FIGURE(bBishops, BLACK_BISHOP);
         INIT_FIGURE(bKnights, BLACK_KNIGHT);
         INIT_FIGURE(bPawns, BLACK_PAWN);
+
 //        INIT(color);
         INIT(castleQ);
         INIT(castleK);
