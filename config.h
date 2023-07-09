@@ -13,4 +13,4 @@ enum engineMode {
     Launch = 3
 };
 
-const engineMode mode = engineMode::Launch;
+const engineMode mode = engineMode::Game;

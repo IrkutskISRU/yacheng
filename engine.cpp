@@ -1,4 +1,3 @@
-    //
 // Created by artyom-m on 3/21/19.
 //
 #define INIT(bitboard) bitboard = position.bitboard;
@@ -32,6 +31,7 @@ struct figure {
 
 namespace Engine {
     int mark;
+    move bestMove{100, 100, 100};
     const ull MASK = 255;
     bitboard wFigures, bFigures, figures, figures_ver, figures_dia1, figures_dia2;
     bitboard figuresArray[1000];
@@ -148,6 +148,41 @@ namespace Engine {
             figures_ver ^= (1ull << BitBoardPrecalc::to_ver[bitTo]);
             figures_dia1 ^= (1ull << BitBoardPrecalc::to_dia1[bitTo]);
             figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[bitTo]);
+
+	    if (color == WHITE) {
+		if (chopped & PAWN) {
+		    mark += 1000;
+		}
+		if (chopped & BISHOP) {
+		    mark += 3000;
+		}
+		if (chopped & KNIGHT) {
+		    mark += 3000;
+		}
+		if (chopped & ROOK) {
+		    mark += 5000;
+		}
+		if (chopped & QUEEN) {
+		    mark += 9000;
+		}
+	    }
+	    if (color == BLACK) {
+		if (chopped & PAWN) {
+		    mark -= 1000;
+		}
+		if (chopped & BISHOP) {
+		    mark -= 3000;
+		}
+		if (chopped & KNIGHT) {
+		    mark -= 3000;
+		}
+		if (chopped & ROOK) {
+		    mark -= 5000;
+		}
+		if (chopped & QUEEN) {
+		    mark -= 9000;
+		}
+	    }
         }
 
         colorFigures ^= mv.from;
@@ -165,6 +200,33 @@ namespace Engine {
 
         if (mv.newFigure != 0) {
             board[bitTo] = mv.newFigure;
+	    if (color == WHITE) {
+		    if (mv.newFigure & BISHOP) {
+			    mark += 2000;
+		    }
+		    if (mv.newFigure & KNIGHT) {
+			    mark += 2000;
+		    }
+		    if (mv.newFigure & ROOK) {
+			    mark += 4000;
+		    }
+		    if (mv.newFigure & QUEEN) {
+			    mark += 8000;
+		    }
+	    } else {
+		    if (mv.newFigure & BISHOP) {
+			    mark -= 2000;
+		    }
+		    if (mv.newFigure & KNIGHT) {
+			    mark -= 2000;
+		    }
+		    if (mv.newFigure & ROOK) {
+			    mark -= 4000;
+		    }
+		    if (mv.newFigure & QUEEN) {
+			    mark -= 8000;
+		    }
+	    }
             figuresArray[mv.newFigure] ^= mv.to;
             figuresArray[mv.figure] ^= mv.to;
         }
@@ -212,6 +274,33 @@ namespace Engine {
             board[bitTo] = mv.figure;
             figuresArray[mv.newFigure] ^= mv.to;
             figuresArray[mv.figure] ^= mv.to;
+	    if (color == BLACK) {
+		    if (mv.newFigure & BISHOP) {
+			    mark += 2000;
+		    }
+		    if (mv.newFigure & KNIGHT) {
+			    mark += 2000;
+		    }
+		    if (mv.newFigure & ROOK) {
+			    mark += 4000;
+		    }
+		    if (mv.newFigure & QUEEN) {
+			    mark += 8000;
+		    }
+	    } else {
+		    if (mv.newFigure & BISHOP) {
+			    mark -= 2000;
+		    }
+		    if (mv.newFigure & KNIGHT) {
+			    mark -= 2000;
+		    }
+		    if (mv.newFigure & ROOK) {
+			    mark -= 4000;
+		    }
+		    if (mv.newFigure & QUEEN) {
+			    mark -= 8000;
+		    }
+	    }
         }
 
         board[bitFrom] = board[bitTo];
@@ -231,6 +320,40 @@ namespace Engine {
             figures_ver ^= (1ull << BitBoardPrecalc::to_ver[bitTo]);
             figures_dia1 ^= (1ull << BitBoardPrecalc::to_dia1[bitTo]);
             figures_dia2 ^= (1ull << BitBoardPrecalc::to_dia2[bitTo]);
+	    if (chopped & BLACK) {
+		if (chopped & PAWN) {
+		    mark -= 1000;
+		}
+		if (chopped & BISHOP) {
+		    mark -= 3000;
+		}
+		if (chopped & KNIGHT) {
+		    mark -= 3000;
+		}
+		if (chopped & ROOK) {
+		    mark -= 5000;
+		}
+		if (chopped & QUEEN) {
+		    mark -= 9000;
+		}
+	    }
+	    if (chopped & WHITE) {
+		if (chopped & PAWN) {
+		    mark += 1000;
+		}
+		if (chopped & BISHOP) {
+		    mark += 3000;
+		}
+		if (chopped & KNIGHT) {
+		    mark += 3000;
+		}
+		if (chopped & ROOK) {
+		    mark += 5000;
+		}
+		if (chopped & QUEEN) {
+		    mark += 9000;
+		}
+	    }
         }
 
         figures_ver ^= (1ull << BitBoardPrecalc::to_ver[bitFrom]);
@@ -265,8 +388,12 @@ namespace Engine {
         return board;
     }
 
-    int getMark() {
-        return mark;
+    int getMark(int color) {
+	if (color == WHITE) {
+	    return mark;
+	} else {
+	    return -mark;
+	}
     }
 
     void init(EPD &position) {
@@ -819,19 +946,25 @@ namespace Engine {
 
     }
 
-    void alphabeta(int color, int depth, int alpha, int beta) {
+    int alphabeta(int color, int ply, int depth, int alpha, int beta) {
         visitedPositionsCnt[depth] ++;
 
         if (depth == 0) {
-            return;
+            return getMark(color) + rand() % 10;
         }
         vector<move> moves;
         vector<bool> notCheck;
         generateAgressiveMoves(moves, color);
         generateSilentMoves(moves, color);
 
+		int good_moves = 0;
+
         for (auto mv: moves) {
 
+			if (alpha >= beta) {
+				return alpha;
+			}
+	
             int chopped = board[BitBoard::bitNumberFromBitBoard(mv.to)];
             bitboard oldEnPassant = enPassant;
             bitboard oldFacticalPawn = facticalPawn;
@@ -840,20 +973,22 @@ namespace Engine {
             bool oldCastlek = castlek;
             bool oldCastleq = castleq;
             doMove(mv, color);
+
             bitboard kingPos = (color == WHITE) ? figuresArray[WHITE_KING] : figuresArray[BLACK_KING];
-            string bestMove = "";
             if (!isCheck(color, kingPos)) {
-//                if (mv.enPassant) {
-//                    enPassentCnt++;
-//                    cout << enPassentCnt << " ";
-//                }
-
-//                if (depth == 1 && oldEnPassant)
-
-//                cout << mv.figure << " " << toHuman[BitBoard::bitNumberFromBitBoard(mv.from)] << " " << toHuman[BitBoard::bitNumberFromBitBoard(mv.to)] << "!\n";
-//                cout << "bestmove " << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].from)] << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].to)] << "\n";
+				good_moves ++;
                 notCheck.push_back(true);
-                alphabeta(color ^ WHITE_BLACK, depth - 1, -beta, -alpha);
+                int subMark = -alphabeta(color ^ WHITE_BLACK, ply + 1, depth - 1, -beta, -alpha);
+				if (subMark > alpha) {
+					alpha = subMark;
+					if (ply == 0) {
+						bestMove = mv;
+					}
+				}
+/*		if (ply == 0) {
+			cout << "move " << toHuman[BitBoard::bitNumberFromBitBoard(mv.from)]
+			     << toHuman[BitBoard::bitNumberFromBitBoard(mv.to)] << " " << subMark << endl;
+		}*/
 
             } else {
                 notCheck.push_back(false);
@@ -871,43 +1006,50 @@ namespace Engine {
 
         }
 
-        if (mode == engineMode::Game) {
-            if (depth == 1) {
-                int randMove = 0;
-                do {
-                    randMove = rand() % moves.size();
-                } while (!notCheck[randMove]);
-                if (moves[randMove].figure == 100) {
+		if (good_moves == 0) {
+				bitboard kingPos = (color == WHITE) ? figuresArray[WHITE_KING] : figuresArray[BLACK_KING];
+				if (isCheck(color, kingPos)) {
+					return -oo + ply * 1000;
+				} else {
+					return 0;
+				}
+		}
+
+        if (mode == engineMode::Game || mode == engineMode::Launch) {
+            if (ply == 0) {
+                if (bestMove.figure == 100) {
                     cout << "bestmove e1g1\n";
-                } else if (moves[randMove].figure == 200) {
+                } else if (bestMove.figure == 200) {
                     cout << "bestmove e1c1\n";
-                } else if (moves[randMove].figure == 300) {
+                } else if (bestMove.figure == 300) {
                     cout << "bestmove e8g8\n";
-                } else if (moves[randMove].figure == 400) {
+                } else if (bestMove.figure == 400) {
                     cout << "bestmove e8c8\n";
                 } else {
-                    if (!moves[randMove].newFigure) {
-                        cout << "bestmove " << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].from)]
-                             << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].to)] << "\n";
+                    if (!bestMove.newFigure) {
+                        cout << "bestmove " << toHuman[BitBoard::bitNumberFromBitBoard(bestMove.from)]
+                             << toHuman[BitBoard::bitNumberFromBitBoard(bestMove.to)] << "\n";
                     } else {
-                        cout << "bestmove " << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].from)]
-                             << toHuman[BitBoard::bitNumberFromBitBoard(moves[randMove].to)];
-                        if (moves[randMove].newFigure & QUEEN) {
+                        cout << "bestmove " << toHuman[BitBoard::bitNumberFromBitBoard(bestMove.from)]
+                             << toHuman[BitBoard::bitNumberFromBitBoard(bestMove.to)];
+                        if (bestMove.newFigure & QUEEN) {
                             cout << "q\n";
                         }
-                        if (moves[randMove].newFigure & BISHOP) {
+                        if (bestMove.newFigure & BISHOP) {
                             cout << "b\n";
                         }
-                        if (moves[randMove].newFigure & ROOK) {
+                        if (bestMove.newFigure & ROOK) {
                             cout << "b\n";
                         }
-                        if (moves[randMove].newFigure & KNIGHT) {
+                        if (bestMove.newFigure & KNIGHT) {
                             cout << "n\n";
                         }
                     }
                 }
             }
         }
+
+	return alpha;
 
 
     }

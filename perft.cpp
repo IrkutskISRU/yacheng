@@ -58,7 +58,7 @@ void testPerft() {
 
         Engine::init(tests[i].position);
 
-        Engine::alphabeta(tests[i].position.color, D, -oo, oo);
+        Engine::alphabeta(tests[i].position.color, 0, D, -oo, oo);
         int j = 0;
         bool OK = true;
 

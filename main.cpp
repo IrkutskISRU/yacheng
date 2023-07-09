@@ -15,13 +15,13 @@ int main() {
     Constants::init();
 
     if (mode == engineMode::Launch) {
-	    EPD position("1n4kr/2B4p/2nb2b1/ppp5/P1PpP3/3P4/5K2/1N1R4 b - c3");
+	    EPD position("rnb2bnr/pppppppp/3k3q/8/8/6N1/PPPPPPPP/RNBQKB1R w KQha - 0 1");
 	    Engine::init(position);
 	    position.print();
-	    Engine::alphabeta(WHITE, 5, -oo, oo);
+	    Engine::alphabeta(WHITE, 0, 6, -oo, oo);
 	    cout << "\n---\n";
 	    position.print();
-	    cout << Engine::getMark();
+	    cout << Engine::getMark(WHITE);
     } else if (mode == engineMode::Perft) {
         testPerft();
         return 0;
@@ -99,9 +99,9 @@ int main() {
 		    } while (s != "go");
 
 		    if (s == "go") {
-			cout << "mark: " << Engine::getMark() << "\n";
+			cout << "mark: " << Engine::getMark(color) << "\n";
 	//                Engine::print_board();
-			Engine::alphabeta(color ^ WHITE_BLACK, 1, -oo, oo);
+			Engine::alphabeta(color ^ WHITE_BLACK, 0, 6, -oo, oo);
 
 		    }
 

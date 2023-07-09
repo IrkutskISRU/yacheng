@@ -30,11 +30,11 @@ namespace Engine {
     };
 
     void init(EPD &position);
-    void alphabeta(int color, int depth, int alpha, int beta);
+    int alphabeta(int color, int ply, int depth, int alpha, int beta);
     void doMove(move mv, int color);
     void undoMove(move mv, int color, int chopped, bitboard oldEnPassant, bitboard oldFacticalPawn);
     vector<ll> getVisitedPositionsCnt();
     vector<int>getBoard();
     void printBoard();
-    int getMark();
+    int getMark(int color);
 }
