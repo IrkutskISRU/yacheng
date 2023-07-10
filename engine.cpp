@@ -15,6 +15,7 @@ for (int i = 0; i < 64; i++) {               \
 #include "bitboard_precalc.h"
 #include <list>
 #include <vector>
+#include <algorithm>
 
 string toHuman[64] = {"a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
                       "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
@@ -30,6 +31,10 @@ struct figure {
     int type;
     bitboard pos;
 };
+
+bool cmp(pair<int, Engine::move>& p1, pair<int, Engine::move>& p2) {
+    return p1.first > p2.first;
+} 
 
 namespace Engine {
     int mark;
@@ -49,7 +54,7 @@ namespace Engine {
     bitboard facticalPawn;
 
 
-    void doMove(move mv, int color) {
+    void doMove(move mv, int color, int currentMove) {
 
         if (mv.from == (1ull << 63)) {
             castleK = false;
@@ -73,29 +78,29 @@ namespace Engine {
         }
 
         if (mv.figure == 100) {
-            doMove({WHITE_KING, (1ull) << 60, (1ull) << 62}, WHITE);
-            doMove({WHITE_ROOK, (1ull) << 63, (1ull) << 61}, WHITE);
+            doMove({WHITE_KING, (1ull) << 60, (1ull) << 62}, WHITE, currentMove);
+            doMove({WHITE_ROOK, (1ull) << 63, (1ull) << 61}, WHITE, currentMove);
 
             return;
         }
 
         if (mv.figure == 200) {
-            doMove({WHITE_KING, (1ull) << 60, (1ull) << 58}, WHITE);
-            doMove({WHITE_ROOK, (1ull) << 56, (1ull) << 59}, WHITE);
+            doMove({WHITE_KING, (1ull) << 60, (1ull) << 58}, WHITE, currentMove);
+            doMove({WHITE_ROOK, (1ull) << 56, (1ull) << 59}, WHITE, currentMove);
 
             return;
         }
 
         if (mv.figure == 300) {
-            doMove({BLACK_KING, (1ull) << 4, (1ull) << 6}, BLACK);
-            doMove({BLACK_ROOK, (1ull) << 7, (1ull) << 5}, BLACK);
+            doMove({BLACK_KING, (1ull) << 4, (1ull) << 6}, BLACK, currentMove);
+            doMove({BLACK_ROOK, (1ull) << 7, (1ull) << 5}, BLACK, currentMove);
 
             return;
         }
 
         if (mv.figure == 400) {
-            doMove({BLACK_KING, (1ull) << 4, (1ull) << 2}, BLACK);
-            doMove({BLACK_ROOK, (1ull) << 0, (1ull) << 3}, BLACK);
+            doMove({BLACK_KING, (1ull) << 4, (1ull) << 2}, BLACK, currentMove);
+            doMove({BLACK_ROOK, (1ull) << 0, (1ull) << 3}, BLACK, currentMove);
 
             return;
         }
@@ -114,15 +119,44 @@ namespace Engine {
         int bitFrom = BitBoard::bitNumberFromBitBoard(mv.from);
         int bitTo = BitBoard::bitNumberFromBitBoard(mv.to);
 
-		if (color == WHITE && mv.figure == WHITE_PAWN) {
-			mark += WHITE_PAWN_WEIGHTS[bitTo];
-			mark -= WHITE_PAWN_WEIGHTS[bitFrom];
+		if (mv.figure == WHITE_PAWN) {
+			mark += WHITE_PAWN_WEIGHTS[bitTo] * 10;
+			mark -= WHITE_PAWN_WEIGHTS[bitFrom] * 10;
 		}
 
-		if (color == BLACK && mv.figure == BLACK_PAWN) {
-			mark += BLACK_PAWN_WEIGHTS[bitTo];
-			mark -= BLACK_PAWN_WEIGHTS[bitFrom];
+		if (mv.figure == BLACK_PAWN) {
+			mark += BLACK_PAWN_WEIGHTS[bitTo] * 10;
+			mark -= BLACK_PAWN_WEIGHTS[bitFrom] * 10;
 		}
+
+		if (mv.figure == WHITE_KNIGHT) {
+			mark += WHITE_KNIGHT_WEIGHTS[bitTo] * 10;
+			mark -= WHITE_KNIGHT_WEIGHTS[bitFrom] * 10;
+		}
+
+		if (mv.figure == BLACK_KNIGHT) {
+			mark += BLACK_KNIGHT_WEIGHTS[bitTo] * 10;
+			mark -= BLACK_KNIGHT_WEIGHTS[bitFrom] * 10;
+		}
+
+        if (mv.figure == WHITE_BISHOP) {
+            mark += WHITE_BISHOP_WEIGHTS[bitTo] * 10;
+            mark -= WHITE_BISHOP_WEIGHTS[bitFrom] * 10;
+        }
+
+        if (mv.figure == BLACK_BISHOP) {
+            mark += BLACK_BISHOP_WEIGHTS[bitTo] * 10;
+            mark -= BLACK_BISHOP_WEIGHTS[bitFrom] * 10;
+        }
+        if (mv.figure == WHITE_KING && currentMove <= 20) {
+            mark += WHITE_KING_WEIGHTS[bitTo] * 10;
+            mark -= WHITE_KING_WEIGHTS[bitFrom] * 10;
+        }
+
+        if (mv.figure == BLACK_KING && currentMove <= 20) {
+            mark += BLACK_KING_WEIGHTS[bitTo] * 10;
+            mark -= BLACK_KING_WEIGHTS[bitFrom] * 10;
+        }
 
         if ((mv.figure == WHITE_PAWN || mv.figure == BLACK_PAWN) && (bitFrom == bitTo + 16 || bitTo == bitFrom + 16)) {
             if (bitTo > bitFrom) {
@@ -165,11 +199,31 @@ namespace Engine {
 
 			mark -= weightByFigure[chopped];
 			if (chopped == WHITE_PAWN) {
-				mark -= WHITE_PAWN_WEIGHTS[bitTo];
+				mark -= WHITE_PAWN_WEIGHTS[bitTo] * 10;
 			}
 			if (chopped == BLACK_PAWN) {
-				mark -= BLACK_PAWN_WEIGHTS[bitTo];
+				mark -= BLACK_PAWN_WEIGHTS[bitTo] * 10;
 			}
+			if (chopped == WHITE_KNIGHT) {
+				mark -= WHITE_KNIGHT_WEIGHTS[bitTo] * 10;
+			}
+			if (chopped == BLACK_KNIGHT) {
+				mark -= BLACK_KNIGHT_WEIGHTS[bitTo] * 10;
+			}
+            if (chopped == WHITE_BISHOP) {
+                mark -= WHITE_BISHOP_WEIGHTS[bitTo] * 10;
+            }
+            if (chopped == BLACK_BISHOP) {
+                mark -= BLACK_BISHOP_WEIGHTS[bitTo] * 10;
+            }
+            if (chopped == WHITE_KING && currentMove <= 20) {
+                mark -= WHITE_KING_WEIGHTS[bitTo] * 10;
+            }
+            if (chopped == BLACK_KING && currentMove <= 20) {
+                mark -= BLACK_KING_WEIGHTS[bitTo] * 10;
+            }
+
+
         }
 
         colorFigures ^= mv.from;
@@ -200,32 +254,32 @@ namespace Engine {
 
     }
 
-    void undoMove(move mv, int color, int chopped, bitboard oldEnPassant, bitboard oldFacticalPawn) {
+    void undoMove(move mv, int color, int chopped, bitboard oldEnPassant, bitboard oldFacticalPawn, int currentMove) {
 
         if (mv.figure == 100) {
-            undoMove({WHITE_KING, (1ull) << 60, (1ull) << 62}, WHITE, 0, 0, 0);
-            undoMove({WHITE_ROOK, (1ull) << 63, (1ull) << 61}, WHITE, 0, 0, 0);
+            undoMove({WHITE_KING, (1ull) << 60, (1ull) << 62}, WHITE, 0, 0, 0, currentMove);
+            undoMove({WHITE_ROOK, (1ull) << 63, (1ull) << 61}, WHITE, 0, 0, 0, currentMove);
 
             return;
         }
 
         if (mv.figure == 200) {
-            undoMove({WHITE_KING, (1ull) << 60, (1ull) << 58}, WHITE, 0, 0, 0);
-            undoMove({WHITE_ROOK, (1ull) << 56, (1ull) << 59}, WHITE, 0, 0, 0);
+            undoMove({WHITE_KING, (1ull) << 60, (1ull) << 58}, WHITE, 0, 0, 0, currentMove);
+            undoMove({WHITE_ROOK, (1ull) << 56, (1ull) << 59}, WHITE, 0, 0, 0, currentMove);
 
             return;
         }
 
         if (mv.figure == 300) {
-            undoMove({BLACK_KING, (1ull) << 4, (1ull) << 6}, BLACK, 0, 0, 0);
-            undoMove({BLACK_ROOK, (1ull) << 7, (1ull) << 5}, BLACK, 0, 0, 0);
+            undoMove({BLACK_KING, (1ull) << 4, (1ull) << 6}, BLACK, 0, 0, 0, currentMove);
+            undoMove({BLACK_ROOK, (1ull) << 7, (1ull) << 5}, BLACK, 0, 0, 0, currentMove);
 
             return;
         }
 
         if (mv.figure == 400) {
-            undoMove({BLACK_KING, (1ull) << 4, (1ull) << 2}, BLACK, 0, 0, 0);
-            undoMove({BLACK_ROOK, (1ull) << 0, (1ull) << 3}, BLACK, 0, 0, 0);
+            undoMove({BLACK_KING, (1ull) << 4, (1ull) << 2}, BLACK, 0, 0, 0, currentMove);
+            undoMove({BLACK_ROOK, (1ull) << 0, (1ull) << 3}, BLACK, 0, 0, 0, currentMove);
 
             return;
         }
@@ -237,14 +291,45 @@ namespace Engine {
         int bitTo = BitBoard::bitNumberFromBitBoard(mv.to);
 
 		if (mv.figure == WHITE_PAWN) {
-			mark -= WHITE_PAWN_WEIGHTS[bitTo];
-			mark += WHITE_PAWN_WEIGHTS[bitFrom];
+			mark -= WHITE_PAWN_WEIGHTS[bitTo] * 10;
+			mark += WHITE_PAWN_WEIGHTS[bitFrom] * 10;
 		}
 
 		if (mv.figure == BLACK_PAWN) {
-			mark -= BLACK_PAWN_WEIGHTS[bitTo];
-			mark += BLACK_PAWN_WEIGHTS[bitFrom];
+			mark -= BLACK_PAWN_WEIGHTS[bitTo] * 10;
+			mark += BLACK_PAWN_WEIGHTS[bitFrom] * 10;
 		}
+
+		if (mv.figure == WHITE_KNIGHT) {
+			mark -= WHITE_KNIGHT_WEIGHTS[bitTo] * 10;
+			mark += WHITE_KNIGHT_WEIGHTS[bitFrom] * 10;
+		}
+
+		if (mv.figure == BLACK_KNIGHT) {
+			mark -= BLACK_KNIGHT_WEIGHTS[bitTo] * 10;
+			mark += BLACK_KNIGHT_WEIGHTS[bitFrom] * 10;
+		}
+
+        if (mv.figure == WHITE_BISHOP) {
+            mark -= WHITE_BISHOP_WEIGHTS[bitTo] * 10;
+            mark += WHITE_BISHOP_WEIGHTS[bitFrom] * 10;
+        }
+
+        if (mv.figure == BLACK_BISHOP) {
+            mark -= BLACK_BISHOP_WEIGHTS[bitTo] * 10;
+            mark += BLACK_BISHOP_WEIGHTS[bitFrom] * 10;
+        }
+        
+        if (mv.figure == WHITE_KING && currentMove <= 20) {
+            mark -= WHITE_KING_WEIGHTS[bitTo] * 10;
+            mark += WHITE_KING_WEIGHTS[bitFrom] * 10;
+        }
+
+        if (mv.figure == BLACK_KING && currentMove <= 20) {
+            mark -= BLACK_KING_WEIGHTS[bitTo] * 10;
+            mark += BLACK_KING_WEIGHTS[bitFrom] * 10;
+        }
+
 
         if (mv.newFigure != 0) {
             board[bitTo] = mv.figure;
@@ -278,11 +363,31 @@ namespace Engine {
 
 			mark += weightByFigure[chopped];
 			if (chopped == WHITE_PAWN) {
-				mark += WHITE_PAWN_WEIGHTS[bitTo];
+				mark += WHITE_PAWN_WEIGHTS[bitTo] * 10;
 			}
 			if (chopped == BLACK_PAWN) {
-				mark += BLACK_PAWN_WEIGHTS[bitTo];
+				mark += BLACK_PAWN_WEIGHTS[bitTo] * 10;
 			}
+			if (chopped == WHITE_KNIGHT) {
+				mark += WHITE_KNIGHT_WEIGHTS[bitTo] * 10;
+			}
+			if (chopped == BLACK_KNIGHT) {
+				mark += BLACK_KNIGHT_WEIGHTS[bitTo] * 10;
+			}
+            if (chopped == WHITE_BISHOP) {
+                mark += WHITE_BISHOP_WEIGHTS[bitTo] * 10;
+            }
+            if (chopped == BLACK_BISHOP) {
+                mark += BLACK_BISHOP_WEIGHTS[bitTo] * 10;
+            }
+            if (chopped == WHITE_KING && currentMove <= 20) {
+                mark += WHITE_KING_WEIGHTS[bitTo] * 10;
+            }
+            if (chopped == BLACK_KING && currentMove <= 20) {
+                mark += BLACK_KING_WEIGHTS[bitTo] * 10;
+            }
+
+
         }
 
         figures_ver ^= (1ull << BitBoardPrecalc::to_ver[bitFrom]);
@@ -485,7 +590,7 @@ namespace Engine {
         return false;
     }
 
-    void generateAgressiveMoves(vector<move>& moves, int color) {
+    void generateAggressiveMoves(vector<move>& moves, int color) {
 
         int figure = (color == WHITE) ? WHITE_PAWN : BLACK_PAWN;
         bitboard bbFrom = figuresArray[figure];
@@ -880,20 +985,125 @@ namespace Engine {
 
     }
 
-    int alphabeta(int color, int ply, int depth, int alpha, int beta, vector<move>& stringFromStart) {
+    int captures(int color, int ply, int alpha, int beta, vector<move>& stringFromStart, int currentMove) {
+		vector<move> tmpBestString;
+        int val = getMark(color) + rand() % 3;
+        if (val > alpha) {
+            alpha = val;
+        }
+        vector<move> moves;
+        generateAggressiveMoves(moves, color);
+
+        vector<pair<int, move>> sortedMoves;
+
+        for (auto mv: moves) {
+            int chopped = board[BitBoard::bitNumberFromBitBoard(mv.to)];
+            bitboard oldEnPassant = enPassant;
+            bitboard oldFacticalPawn = facticalPawn;
+            bool oldCastleK = castleK;
+            bool oldCastleQ = castleQ;
+            bool oldCastlek = castlek;
+            bool oldCastleq = castleq;
+            doMove(mv, color, currentMove);
+            sortedMoves.push_back({getMark(color), mv});
+            if (mv.enPassant) {
+                chopped = (color == WHITE) ? BLACK_PAWN : WHITE_PAWN;
+            }
+            undoMove(mv, color, chopped, oldEnPassant, oldFacticalPawn, currentMove);
+            enPassant = oldEnPassant;
+            facticalPawn = oldFacticalPawn;
+            castleK = oldCastleK;
+            castleQ = oldCastleQ;
+            castlek = oldCastlek;
+            castleq = oldCastleq;
+        }
+
+        sort(sortedMoves.begin(), sortedMoves.end(), cmp);
+        for (auto pair: sortedMoves) {
+            auto mv = pair.second;
+            if (alpha >= beta) 
+                break;
+			vector<move> tmpString{mv};
+            int chopped = board[BitBoard::bitNumberFromBitBoard(mv.to)];
+            bitboard oldEnPassant = enPassant;
+            bitboard oldFacticalPawn = facticalPawn;
+            bool oldCastleK = castleK;
+            bool oldCastleQ = castleQ;
+            bool oldCastlek = castlek;
+            bool oldCastleq = castleq;
+            doMove(mv, color, currentMove);
+            bitboard kingPos = (color == WHITE) ? figuresArray[WHITE_KING] : figuresArray[BLACK_KING];
+            if (!isCheck(color, kingPos)) {
+                int subMark = -captures(color ^ WHITE_BLACK, ply + 1, -beta, -alpha, tmpString, currentMove);
+                if (subMark > alpha) {
+                    tmpBestString = tmpString;
+                    alpha = subMark;
+                }
+            }
+            if (mv.enPassant) {
+                chopped = (color == WHITE) ? BLACK_PAWN : WHITE_PAWN;
+            }
+            undoMove(mv, color, chopped, oldEnPassant, oldFacticalPawn, currentMove);
+            enPassant = oldEnPassant;
+            facticalPawn = oldFacticalPawn;
+            castleK = oldCastleK;
+            castleQ = oldCastleQ;
+            castlek = oldCastlek;
+            castleq = oldCastleq;
+        }
+		for (auto& stringMv : tmpBestString) {
+			stringFromStart.emplace_back(stringMv);
+		}
+
+        return alpha;
+    }
+
+    int alphabeta(int color, int ply, int depth, int alpha, int beta, vector<move>& stringFromStart, int currentMove) {
         visitedPositionsCnt[depth] ++;
         if (depth == 0) {
-            return getMark(color) + rand() % 3;
+            vector<move> tmpString;
+            auto val = captures(color, ply + 1, alpha, beta, tmpString, currentMove);
+            for (auto& stringMv : tmpString) {
+                stringFromStart.emplace_back(stringMv);
+            }
+            return val;
         }
         vector<move> moves;
         vector<bool> notCheck;
-        generateAgressiveMoves(moves, color);
+        generateAggressiveMoves(moves, color);
         generateSilentMoves(moves, color);
 
 		int good_moves = 0;
 		vector<move> tmpBestString;
 
+        vector<pair<int, move>> sortedMoves;
+
         for (auto mv: moves) {
+            int chopped = board[BitBoard::bitNumberFromBitBoard(mv.to)];
+            bitboard oldEnPassant = enPassant;
+            bitboard oldFacticalPawn = facticalPawn;
+            bool oldCastleK = castleK;
+            bool oldCastleQ = castleQ;
+            bool oldCastlek = castlek;
+            bool oldCastleq = castleq;
+            doMove(mv, color, currentMove);
+            sortedMoves.push_back({getMark(color), mv});
+            if (mv.enPassant) {
+                chopped = (color == WHITE) ? BLACK_PAWN : WHITE_PAWN;
+            }
+            undoMove(mv, color, chopped, oldEnPassant, oldFacticalPawn, currentMove);
+            enPassant = oldEnPassant;
+            facticalPawn = oldFacticalPawn;
+            castleK = oldCastleK;
+            castleQ = oldCastleQ;
+            castlek = oldCastlek;
+            castleq = oldCastleq;
+        }
+
+        sort(sortedMoves.begin(), sortedMoves.end(), cmp);
+
+        for (auto pair: sortedMoves) {
+            auto mv = pair.second;
 			vector<move> tmpString{mv};
 
 			if (alpha >= beta) {
@@ -907,13 +1117,13 @@ namespace Engine {
             bool oldCastleQ = castleQ;
             bool oldCastlek = castlek;
             bool oldCastleq = castleq;
-            doMove(mv, color);
+            doMove(mv, color, currentMove);
 
             bitboard kingPos = (color == WHITE) ? figuresArray[WHITE_KING] : figuresArray[BLACK_KING];
             if (!isCheck(color, kingPos)) {
 				good_moves ++;
                 notCheck.push_back(true);
-                int subMark = -alphabeta(color ^ WHITE_BLACK, ply + 1, depth - 1, -beta, -alpha, tmpString);
+                int subMark = -alphabeta(color ^ WHITE_BLACK, ply + 1, depth - 1, -beta, -alpha, tmpString, currentMove);
 				if (subMark > alpha) {
 					tmpBestString = tmpString;
 					alpha = subMark;
@@ -940,7 +1150,7 @@ namespace Engine {
             if (mv.enPassant) {
                 chopped = (color == WHITE) ? BLACK_PAWN : WHITE_PAWN;
             }
-            undoMove(mv, color, chopped, oldEnPassant, oldFacticalPawn);
+            undoMove(mv, color, chopped, oldEnPassant, oldFacticalPawn, currentMove);
             enPassant = oldEnPassant;
             facticalPawn = oldFacticalPawn;
             castleK = oldCastleK;

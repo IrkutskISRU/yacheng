@@ -19,7 +19,7 @@ int main() {
 	    Engine::init(position);
 	    position.print();
 	    vector<Engine::move> moves;
-	    Engine::alphabeta(WHITE, 0, 6, -oo, oo, moves);
+	    Engine::alphabeta(WHITE, 0, 6, -oo, oo, moves, 0);
 	    cout << "\n---\n";
 	    position.print();
 	    cout << Engine::getMark(WHITE);
@@ -27,6 +27,8 @@ int main() {
         testPerft();
         return 0;
     } else if (mode == engineMode::Game) {
+
+        int currentMove = 0;
 
 	    srand(time(0));
 
@@ -50,10 +52,13 @@ int main() {
 
 		    EPD position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -");
 		    Engine::init(position);
+            currentMove = 0;
 		    int color = WHITE;
 		    do {
 			cin >> s;
 			if (s != "go") {
+
+                currentMove ++;
 
 			    bitboard from = (1ull << (8 * ('8' - s[1]) + (s[0] - 'a')));
 			    bitboard to = (1ull << (8 * ('8' - s[3]) + (s[2] - 'a')));
@@ -92,7 +97,7 @@ int main() {
 			    }
 
 
-			    Engine::doMove(mv, color);
+			    Engine::doMove(mv, color, currentMove);
 	//                    Engine::print_board();
 			}
 			color = color ^ WHITE_BLACK;
@@ -103,7 +108,7 @@ int main() {
 			cout << "mark: " << Engine::getMark(color) << "\n";
 	//                Engine::print_board();
 			vector<Engine::move> moves;
-			Engine::alphabeta(color ^ WHITE_BLACK, 0, 6, -oo, oo, moves);
+			Engine::alphabeta(color ^ WHITE_BLACK, 0, 6, -oo, oo, moves, currentMove);
 
 		    }
 
