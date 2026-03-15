@@ -1034,10 +1034,16 @@ namespace Engine {
             doMove(mv, color, currentMove);
             bitboard kingPos = (color == WHITE) ? figuresArray[WHITE_KING] : figuresArray[BLACK_KING];
             if (!isCheck(color, kingPos)) {
-                int subMark = -captures(color ^ WHITE_BLACK, ply + 1, -beta, -alpha, tmpString, currentMove);
-                if (subMark > alpha) {
-                    tmpBestString = tmpString;
-                    alpha = subMark;
+                int zeroWindow = -captures(color ^ WHITE_BLACK, ply + 1, -(alpha + 1), -alpha, tmpString, currentMove);
+
+                if (zeroWindow > alpha && zeroWindow < beta) {
+                    int subMark = -captures(color ^ WHITE_BLACK, ply + 1, -beta, -alpha, tmpString, currentMove);
+                    if (subMark > alpha) {
+                        tmpBestString = tmpString;
+                        alpha = subMark;
+                    }
+                } else if (zeroWindow > alpha) {
+                    alpha = zeroWindow;
                 }
             }
             if (mv.enPassant) {
