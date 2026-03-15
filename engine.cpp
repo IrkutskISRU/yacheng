@@ -1065,8 +1065,14 @@ namespace Engine {
     }
 
     int alphabeta(int color, int ply, int depth, int alpha, int beta, vector<move>& stringFromStart, int currentMove, move& lastBest) {
+        bitboard kingPos = (color == WHITE) ? figuresArray[WHITE_KING] : figuresArray[BLACK_KING];
+        bool checkInParent = false;
+        if (isCheck(color, kingPos)) {
+            depth++;
+            checkInParent = true;
+        }
         visitedPositionsCnt[depth] ++;
-        if (depth == 0) {
+        if (depth == 0 || ply > 20) {
             vector<move> tmpString;
             auto val = captures(color, ply + 1, alpha, beta, tmpString, currentMove);
             for (auto& stringMv : tmpString) {
@@ -1093,11 +1099,14 @@ namespace Engine {
             bool oldCastlek = castlek;
             bool oldCastleq = castleq;
             doMove(mv, color, currentMove);
-            auto mark = getMark(color);
-            if (mv == lastBest) {
-                sortedMoves.push_back({oo, mv});
-            } else {
-                sortedMoves.push_back({mark, mv});
+            bitboard kingPos = (color == WHITE) ? figuresArray[WHITE_KING] : figuresArray[BLACK_KING];
+            if (!isCheck(color, kingPos)) {
+                auto mark = getMark(color);
+                if (mv == lastBest) {
+                    sortedMoves.push_back({oo, mv});
+                } else {
+                    sortedMoves.push_back({mark, mv});
+                }
             }
             if (mv.enPassant) {
                 chopped = (color == WHITE) ? BLACK_PAWN : WHITE_PAWN;
@@ -1112,6 +1121,10 @@ namespace Engine {
         }
 
         sort(sortedMoves.begin(), sortedMoves.end(), cmp);
+
+        if (sortedMoves.size() == 1 && checkInParent) {
+            depth++;
+        }
 
         for (auto pair: sortedMoves) {
             auto mv = pair.second;
@@ -1131,41 +1144,37 @@ namespace Engine {
             doMove(mv, color, currentMove);
 
             bitboard kingPos = (color == WHITE) ? figuresArray[WHITE_KING] : figuresArray[BLACK_KING];
-            if (!isCheck(color, kingPos)) {
-				good_moves ++;
-                notCheck.push_back(true);
-                int zeroWindow = oo;
-                if (good_moves > 1) {
-                    zeroWindow = -alphabeta(color ^ WHITE_BLACK, ply + 1, depth - 1, -(alpha+1), -alpha, tmpString, currentMove, lastBest);
-                }
-                if (zeroWindow == oo || zeroWindow > alpha && zeroWindow < beta) {
-                    int subMark = -alphabeta(color ^ WHITE_BLACK, ply + 1, depth - 1, -beta, -alpha, tmpString, currentMove, lastBest);
-                    if (subMark > alpha) {
-                        tmpBestString = tmpString;
-                        alpha = subMark;
-                        if (ply == 0) {
-                            bestMove = mv;
-                            bestScore = subMark;
-                            bestString.clear();
-                            for (auto stringMv: stringFromStart) {
-                                bestString.emplace_back(stringMv);
-                            }
-                            for (auto stringMv: tmpString) {
-                                bestString.emplace_back(stringMv);
-                            }
+            good_moves ++;
+            notCheck.push_back(true);
+            int zeroWindow = oo;
+            if (good_moves > 1) {
+                zeroWindow = -alphabeta(color ^ WHITE_BLACK, ply + 1, depth - 1, -(alpha+1), -alpha, tmpString, currentMove, lastBest);
+            }
+            if (zeroWindow == oo || zeroWindow > alpha && zeroWindow < beta) {
+                int subMark = -alphabeta(color ^ WHITE_BLACK, ply + 1, depth - 1, -beta, -alpha, tmpString, currentMove, lastBest);
+                if (subMark > alpha) {
+                    tmpBestString = tmpString;
+                    alpha = subMark;
+                    if (ply == 0) {
+                        bestMove = mv;
+                        bestScore = subMark;
+                        bestString.clear();
+                        for (auto stringMv: stringFromStart) {
+                            bestString.emplace_back(stringMv);
+                        }
+                        for (auto stringMv: tmpString) {
+                            bestString.emplace_back(stringMv);
                         }
                     }
-                } else if (zeroWindow > alpha) {
-                    alpha = zeroWindow;
                 }
+            } else if (zeroWindow > alpha) {
+                alpha = zeroWindow;
+            }
 /*		if (ply == 0) {
 			cout << "move " << toHuman[BitBoard::bitNumberFromBitBoard(mv.from)]
 			     << toHuman[BitBoard::bitNumberFromBitBoard(mv.to)] << " " << subMark << endl;
 		}*/
 
-            } else {
-                notCheck.push_back(false);
-            }
             if (mv.enPassant) {
                 chopped = (color == WHITE) ? BLACK_PAWN : WHITE_PAWN;
             }
