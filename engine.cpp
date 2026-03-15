@@ -987,7 +987,7 @@ namespace Engine {
 
     int captures(int color, int ply, int alpha, int beta, vector<move>& stringFromStart, int currentMove) {
 		vector<move> tmpBestString;
-        int val = getMark(color) + rand() % 3;
+        int val = getMark(color); // + rand() % 3;
         if (val > alpha) {
             alpha = val;
         }
@@ -1058,7 +1058,7 @@ namespace Engine {
         return alpha;
     }
 
-    int alphabeta(int color, int ply, int depth, int alpha, int beta, vector<move>& stringFromStart, int currentMove) {
+    int alphabeta(int color, int ply, int depth, int alpha, int beta, vector<move>& stringFromStart, int currentMove, move& lastBest) {
         visitedPositionsCnt[depth] ++;
         if (depth == 0) {
             vector<move> tmpString;
@@ -1087,7 +1087,12 @@ namespace Engine {
             bool oldCastlek = castlek;
             bool oldCastleq = castleq;
             doMove(mv, color, currentMove);
-            sortedMoves.push_back({getMark(color), mv});
+            auto mark = getMark(color);
+            if (mv == lastBest) {
+                sortedMoves.push_back({oo, mv});
+            } else {
+                sortedMoves.push_back({mark, mv});
+            }
             if (mv.enPassant) {
                 chopped = (color == WHITE) ? BLACK_PAWN : WHITE_PAWN;
             }
@@ -1123,22 +1128,30 @@ namespace Engine {
             if (!isCheck(color, kingPos)) {
 				good_moves ++;
                 notCheck.push_back(true);
-                int subMark = -alphabeta(color ^ WHITE_BLACK, ply + 1, depth - 1, -beta, -alpha, tmpString, currentMove);
-				if (subMark > alpha) {
-					tmpBestString = tmpString;
-					alpha = subMark;
-					if (ply == 0) {
-						bestMove = mv;
-						bestScore = subMark;
-						bestString.clear();
-						for (auto stringMv: stringFromStart) {
-							bestString.emplace_back(stringMv);
-						}
-						for (auto stringMv: tmpString) {
-							bestString.emplace_back(stringMv);
-						}
-					}
-				}
+                int zeroWindow = oo;
+                if (good_moves > 1) {
+                    zeroWindow = -alphabeta(color ^ WHITE_BLACK, ply + 1, depth - 1, -(alpha+1), -alpha, tmpString, currentMove, lastBest);
+                }
+                if (zeroWindow == oo || zeroWindow > alpha && zeroWindow < beta) {
+                    int subMark = -alphabeta(color ^ WHITE_BLACK, ply + 1, depth - 1, -beta, -alpha, tmpString, currentMove, lastBest);
+                    if (subMark > alpha) {
+                        tmpBestString = tmpString;
+                        alpha = subMark;
+                        if (ply == 0) {
+                            bestMove = mv;
+                            bestScore = subMark;
+                            bestString.clear();
+                            for (auto stringMv: stringFromStart) {
+                                bestString.emplace_back(stringMv);
+                            }
+                            for (auto stringMv: tmpString) {
+                                bestString.emplace_back(stringMv);
+                            }
+                        }
+                    }
+                } else if (zeroWindow > alpha) {
+                    alpha = zeroWindow;
+                }
 /*		if (ply == 0) {
 			cout << "move " << toHuman[BitBoard::bitNumberFromBitBoard(mv.from)]
 			     << toHuman[BitBoard::bitNumberFromBitBoard(mv.to)] << " " << subMark << endl;
@@ -1180,6 +1193,7 @@ namespace Engine {
                              << toHuman[BitBoard::bitNumberFromBitBoard(moveString.to)] << " ";
 		}
 		cout << "\n";
+                lastBest = bestMove;
                 if (bestMove.figure == 100) {
                     cout << "bestmove e1g1\n";
                 } else if (bestMove.figure == 200) {

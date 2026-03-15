@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <chrono>
 
 #include "constants.h"
 #include "engine.h"
@@ -19,7 +20,8 @@ int main() {
 	    Engine::init(position);
 	    position.print();
 	    vector<Engine::move> moves;
-	    Engine::alphabeta(WHITE, 0, 6, -oo, oo, moves, 0);
+        Engine::move tmpMove{100,100,100};
+	    Engine::alphabeta(WHITE, 0, 7, -oo, oo, moves, 0, tmpMove);
 	    cout << "\n---\n";
 	    position.print();
 	    cout << Engine::getMark(WHITE);
@@ -35,6 +37,7 @@ int main() {
 	    while (true) {
 		string s;
 		cin >> s;
+		cout << s << "\n";
 		if (s == "uci") {
 		    cout << "id name YaCheng 0.0\n";
 		    cout << "id author Artyom Mukhometzyanov\n";
@@ -105,10 +108,19 @@ int main() {
 		    } while (s != "go");
 
 		    if (s == "go") {
-			cout << "mark: " << Engine::getMark(color) << "\n";
 	//                Engine::print_board();
-			vector<Engine::move> moves;
-			Engine::alphabeta(color ^ WHITE_BLACK, 0, 6, -oo, oo, moves, currentMove);
+            Engine::move bestMove{100, 100, 100};
+			auto start = std::chrono::high_resolution_clock::now();
+			for (int x = 3; x <= 11; x++) {
+				vector<Engine::move> moves;
+				cout << "depth: " << x << "\n";
+				auto mark = Engine::alphabeta(color ^ WHITE_BLACK, 0, x, -oo, oo, moves, currentMove, bestMove);
+				cout <<"mark: " << mark << "\n";			
+				auto end = std::chrono::high_resolution_clock::now();
+				std::chrono::duration<double> duration = end - start;
+				cout << "duration: ";
+				cout << duration.count() << "\n";
+}
 
 		    }
 

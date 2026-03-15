@@ -27,10 +27,14 @@ namespace Engine {
                 newFigure(NewFigure)
         {
         }
+
+        bool operator==(move& other) {
+            return figure == other.figure && from == other.from && to == other.to && enPassant == other.enPassant && newFigure == other.newFigure;
+        }
     };
 
     void init(EPD &position);
-    int alphabeta(int color, int ply, int depth, int alpha, int beta, vector<move>& stringFromStart, int currentMove);
+    int alphabeta(int color, int ply, int depth, int alpha, int beta, vector<move>& stringFromStart, int currentMove, move& lastBest);
     void doMove(move mv, int color, int currentMove);
     void undoMove(move mv, int color, int chopped, bitboard oldEnPassant, bitboard oldFacticalPaw, int currentMoven);
     vector<ll> getVisitedPositionsCnt();
